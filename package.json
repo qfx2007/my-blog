@@ -38,7 +38,7 @@
     "@navfolio/plugin-markdown": "github:navfolio/plugin-markdown",
     "@navfolio/theme-default": "github:navfolio/theme-default",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^7.1.3",
+    "astro": "^7.3.8",
     "astro-expressive-code": "^0.44.1",
     "date-fns": "^4.4.0",
     "github-slugger": "^2.0.0",
