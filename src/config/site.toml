@@ -154,14 +154,13 @@ href = "/about"
 
 [config.home.quote]
 text = [
-  "N,",
-  "S,",
-  "and keep everything in one place.",
+  "保持好奇,认真记录,",
+  "好好生活.",
 ]
 
 [config.home.intro]
-title = "here is my personal website"
-name = "my personal website"
+title = "here is my blog"
+name = "my blog"
 body = [
   "一个探索 AI全栈方向的开发学习者，喜欢折腾，也愿意沉淀。",
   "项目、文章、成长，都在这里。",
