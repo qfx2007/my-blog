@@ -5,7 +5,7 @@ pageTitle = "navfolio | Digital Publication Space"
 pageDescription = "A calm AI-native personal publication space for notes, links, and writing."
 url = "https://astro.navfolio.site"
 repository = "https://github.com/qfx2007/my-blog"
-footerNote = "111"
+footerNote = "用作品表达、用文章记录。"
 
 [config.theme]
 # 可用色盘：
@@ -120,10 +120,10 @@ comment = true
 [config.profile]
 name = "Q"
 handle = "@Q"
-role = "A Cat Developer"
+role = "A Prospective Frontend Engineer"
 email = "2171334945@qq.com"
-website = "https://astro.navfolio.site/"
-github = "https://github.com/dodolalorc/astro-navfolio"
+website = "https://blog.20070228.xyz/"
+github = "https://github.com/qfx2007/my-blog"
 avatar = "/images/avatar.png"
 
 [[config.topNav.links]]
@@ -131,23 +131,24 @@ label = "首页"
 href = "/"
 
 [[config.topNav.links]]
-label = "Blog"
-href = "/blog"
-
-[[config.topNav.links]]
 label = "作品集"
 module = "projects"
+
+[[config.topNav.links]]
+label = "文章"
+href = "/blog"
 
 [[config.topNav.links]]
 label = "Vibe"
 module = "vibe"
 
-[[config.topNav.links]]
-label = "Media"
-module = "media"
+# 暂时注释掉顶部media导航部分
+# [[config.topNav.links]]
+# label = "Media"
+# module = "media"
 
 [[config.topNav.links]]
-label = "About"
+label = "关于本站"
 href = "/about"
 
 [config.home]
@@ -175,40 +176,24 @@ excludeDraft = true
 startDate = ""
 dateArchiveBaseHref = ""
 
-[[config.home.navigation]]
-icon = "compass"
-title = "Portfolio"
-subtitle = "Selected work and case studies"
-href = "https://astro.navfolio.site/"
-
+# 右侧导航栏部分
 [[config.home.navigation]]
 icon = "pen"
-title = "Blog"
+title = "文章"
 subtitle = "Essays, notes, and field reports"
 href = "/blog"
 
 [[config.home.navigation]]
 icon = "briefcase"
-title = "Resume"
-subtitle = "Career profile and experience"
-href = "https://github.com/dodolalorc/navfolio"
+title = "作品集"
+subtitle = "待完善..."
+href = "/vibe"
 
-[[config.home.navigation]]
-icon = "github"
-title = "Open Source"
-subtitle = "Code, experiments, and tools"
-href = "https://github.com/dodolalorc/astro-navfolio"
 
 [[config.home.links]]
 label = "GitHub"
 icon = "github"
-tooltip = "https://github.com/dodolalorc/astro-navfolio"
-copy = false
-
-[[config.home.links]]
-label = "LinkedIn"
-icon = "linkedin"
-tooltip = "https://www.linkedin.com/"
+tooltip = "https://github.com/qfx2007"
 copy = false
 
 [[config.home.links]]
@@ -220,67 +205,20 @@ copy = false
 [[config.home.links]]
 label = "RSS"
 icon = "rss"
-tooltip = "/rss.xml"
-copy = false
+tooltip = "https://blog.20070228.xyz/rss.xml"
+copy = true
 
 [[config.home.links]]
 label = "Email"
 icon = "mail"
-tooltip = "hello@navfolio.site"
+tooltip = "2171334945@qq.com"
 copy = true
 
-[[config.home.links]]
-label = "QQ"
-icon = "qq"
-tooltip = "123456789"
-copy = true
-
-[[config.home.links]]
-label = "WeChat"
-icon = "wechat"
-tooltip = "navfolio"
-copy = true
-
-[[config.home.links]]
-label = "Weibo"
-icon = "weibo"
-tooltip = "https://weibo.com/"
-copy = false
-
-[[config.home.links]]
-label = "Xiaohongshu"
-icon = "xiaohongshu"
-tooltip = "https://www.xiaohongshu.com/"
-copy = false
-
-[[config.home.links]]
-label = "Zhihu"
-icon = "zhihu"
-tooltip = "https://www.zhihu.com/"
-copy = false
-
-[[config.home.links]]
-label = "Bilibili"
-icon = "bilibili"
-tooltip = "https://www.bilibili.com/"
-copy = false
 
 [[config.home.doing]]
-text = "Shipping a personal dashboard template"
+text = "正在完善开发中..."
 mark = "01"
 
 [[config.home.doing]]
-text = "Writing reusable notes for future projects"
+text = "正在完善开发中..."
 mark = "02"
-
-[[config.home.doing]]
-text = "Improving static-site publishing workflow"
-mark = "03"
-
-[[config.home.doing]]
-text = "Collecting useful developer resources"
-mark = "04"
-
-[[config.home.doing]]
-text = "Exploring small open-source ideas"
-mark = "05"
