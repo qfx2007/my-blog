@@ -1,0 +1,57 @@
+{
+  "name": "@navfolio/theme-default",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/navfolio/theme-default.git"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./components/BaseHead.astro": "./src/components/BaseHead.astro",
+    "./components/BaseLayout.astro": "./src/components/BaseLayout.astro",
+    "./components/BlogPost.astro": "./src/components/BlogPost.astro",
+    "./components/BlogArchiveHeader.astro": "./src/components/BlogArchiveHeader.astro",
+    "./components/CategoryCard.astro": "./src/components/CategoryCard.astro",
+    "./components/Footer.astro": "./src/components/Footer.astro",
+    "./components/SeriesProgress.astro": "./src/components/SeriesProgress.astro",
+    "./styles/blog-article.css": "./src/styles/blog-article.css",
+    "./styles/blog-archive.css": "./src/styles/blog-archive.css",
+    "./styles/blog-back-link.css": "./src/styles/blog-back-link.css",
+    "./styles/blog-group-nav.css": "./src/styles/blog-group-nav.css",
+    "./styles/blog-post-list.css": "./src/styles/blog-post-list.css",
+    "./styles/blog-related-posts.css": "./src/styles/blog-related-posts.css",
+    "./styles/blog-article-info-card.css": "./src/styles/blog-article-info-card.css",
+    "./styles/blog-bottom-action-bar.css": "./src/styles/blog-bottom-action-bar.css",
+    "./styles/blog-series-card.css": "./src/styles/blog-series-card.css",
+    "./styles/global.css": "./src/styles/global.css",
+    "./styles/markdown-layouts.css": "./src/styles/markdown-layouts.css",
+    "./styles/palettes.css": "./src/styles/palettes.css"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/maple-mono": "^5.2.6",
+    "@navfolio/core": "file:../core",
+    "lucide-astro": "^0.556.0"
+  },
+  "peerDependencies": {
+    "astro": ">=7.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

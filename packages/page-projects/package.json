@@ -1,0 +1,39 @@
+{
+  "name": "@navfolio/page-projects",
+  "version": "0.0.0",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/navfolio/page-projects.git"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@navfolio/core": "file:../core",
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "@navfolio/core": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@navfolio/core": {
+      "optional": true
+    }
+  }
+}

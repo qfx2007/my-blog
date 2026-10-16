@@ -1,0 +1,48 @@
+{
+  "name": "@navfolio/mdx-components",
+  "version": "0.1.0",
+  "description": "Official Astro and MDX content components for Navfolio.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navfolio/mdx-components.git"
+  },
+  "keywords": [
+    "astro",
+    "mdx",
+    "navfolio",
+    "components"
+  ],
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    "./FriendLinkCard.astro": "./src/FriendLinkCard.astro",
+    "./FriendLinkApplication.astro": "./src/FriendLinkApplication.astro",
+    "./FriendCircle.astro": "./src/FriendCircle.astro",
+    "./LongImage.astro": "./src/LongImage.astro",
+    "./MermaidRenderer.astro": "./src/MermaidRenderer.astro",
+    "./Carousel.astro": "./src/Carousel.astro",
+    "./MusicPlayer.astro": "./src/MusicPlayer.astro",
+    "./MediaShelf.astro": "./src/MediaShelf.astro",
+    "./ZoomableImage.astro": "./src/ZoomableImage.astro",
+    "./music-theme": "./src/lib/music-theme.ts",
+    "./friend-data": "./src/lib/friend-data.ts"
+  },
+  "peerDependencies": {
+    "astro": "^5.0.0 || ^6.0.0 || ^7.0.0",
+    "lucide-astro": "^0.556.0",
+    "mermaid": "^11.0.0"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@types/node": "^26.1.1",
+    "typescript": "^6.0.3"
+  }
+}

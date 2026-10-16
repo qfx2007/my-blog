@@ -6,6 +6,7 @@
   "tabWidth": 2,
   "trailingComma": "all",
   "useTabs": false,
+  "endOfLine": "auto",
   "overrides": [
     {
       "files": "*.astro",
