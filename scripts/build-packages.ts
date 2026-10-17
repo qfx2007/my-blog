@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 const projectRoot = process.cwd();
@@ -89,6 +89,23 @@ function sortPackages(packages: PackageInfo[]): PackageInfo[] {
   return ordered;
 }
 
+// bun 将 file: 依赖物理复制进 node_modules（安装时刻的快照），之后在 packages/
+// 里新编译出的 dist 不会自动出现在拷贝里，导致类型解析（tsc）和运行时（bun/vite）
+// 都找不到入口。每次编译成功后手动把 dist 同步进 node_modules。
+function syncDistToNodeModules(pkg: PackageInfo): void {
+  const sourceDist = join(pkg.dir, 'dist');
+  const installedPackageDir = join(projectRoot, 'node_modules', ...pkg.name.split('/'));
+
+  if (!existsSync(installedPackageDir)) {
+    console.error(`[packages:build] installed package not found: ${pkg.name}`);
+    process.exit(1);
+  }
+
+  const targetDist = join(installedPackageDir, 'dist');
+  rmSync(targetDist, { recursive: true, force: true });
+  cpSync(sourceDist, targetDist, { recursive: true });
+}
+
 if (!existsSync(tscPath)) {
   console.error(`[packages:build] TypeScript compiler not found: ${tscPath}`);
   process.exit(1);
@@ -108,6 +125,8 @@ for (const pkg of buildablePackages) {
     console.error(`[packages:build] failed: ${pkg.name}`);
     process.exit(result.status ?? 1);
   }
+
+  syncDistToNodeModules(pkg);
 }
 
 console.log(`[packages:build] built ${buildablePackages.length} packages`);
