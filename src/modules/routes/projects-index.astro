@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
 import {
   Box,
   Code2,
@@ -22,6 +23,8 @@ import navfolioConfig from '../../../navfolio.config';
 import { getPageModuleRoute } from '../../plugins/config';
 import { sortBlogPostsForArchive } from '../../utils/content-dates';
 import { getI18n } from '../../utils/ui-text';
+import { getProjectImageLayout } from './lib/project-image-layout';
+import flightIconUrl from '../../assets/icons/flight.svg?url';
 
 const siteConfig = await getSiteConfig();
 const { pages } = siteConfig;
@@ -39,6 +42,7 @@ if (!projectIndex) {
 const { Content, headings } = await render(projectIndex);
 const projectIndexPage = {
   ...projectIndex,
+  collection: 'projects-index',
   data: {
     ...projectIndex.data,
     title: pageMeta.title,
@@ -46,7 +50,21 @@ const projectIndexPage = {
   },
 };
 
-const relatedProjects = projects;
+const relatedProjects = projects.map((project) => {
+  const galleryImages =
+    project.data.images.length > 0
+      ? project.data.images
+      : project.data.heroImage
+        ? [project.data.heroImage]
+        : [];
+
+  return {
+    project,
+    galleryImages,
+    imageLayout: getProjectImageLayout(galleryImages.length),
+  };
+});
+
 const projectsRoute = getPageModuleRoute(navfolioConfig, 'projects');
 const i18n = getI18n(siteConfig);
 
@@ -89,26 +107,94 @@ function withBase(href: string) {
 
   {
     relatedProjects.length > 0 ? (
-      <section class="project-grid" aria-label={i18n.t('projects.listLabel')}>
-        {relatedProjects.map((project) => {
+      <section
+        class="project-stream"
+        aria-label={i18n.t('projects.listLabel')}
+        style={`--project-flight-icon: url("${flightIconUrl}");`}
+      >
+        <svg class="project-thread" aria-hidden="true">
+          <defs>
+            <linearGradient id="project-pencil-fade" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
+              <stop offset="16%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
+              <stop offset="84%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
+              <stop offset="100%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
+            </linearGradient>
+            <filter id="project-pencil-texture" x="-12%" y="-12%" width="124%" height="124%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.9"
+                numOctaves="2"
+                seed="8"
+                result="grain"
+              />
+              <feDisplacementMap in="SourceGraphic" in2="grain" scale="0.65" />
+            </filter>
+          </defs>
+          <path class="project-thread-path" data-project-thread-path />
+          <path class="project-thread-grain" data-project-thread-grain />
+        </svg>
+        {relatedProjects.map(({ project, galleryImages, imageLayout }, index) => {
           const ProjectIcon = projectIcons[project.data.icon] ?? Github;
           const projectHref = withBase(`${projectsRoute}/${project.id}/`);
+          const align = index % 2 === 0 ? 'left' : 'right';
 
           return (
             <article
-              class="project-card"
-              style={
-                project.data.iconColor
-                  ? `--project-icon-color: ${project.data.iconColor}`
-                  : undefined
-              }
+              class:list={['project-card', align]}
+              style={`--project-index: ${index}${
+                project.data.iconColor ? `; --project-icon-color: ${project.data.iconColor}` : ''
+              }`}
+              data-project-item
+              data-project-index={index}
             >
+              <span class="project-dot" data-project-dot aria-hidden="true" />
               <div class="project-card-heading">
                 <ProjectIcon class="project-icon" size={22} strokeWidth={1.55} aria-hidden="true" />
                 <h2>
                   <a href={projectHref}>{project.data.title}</a>
                 </h2>
               </div>
+              {galleryImages.length > 0 && (
+                <div
+                  class:list={['project-images', imageLayout.isCollapsible && 'is-collapsible']}
+                  style={`--project-image-columns: ${imageLayout.columns};`}
+                  data-project-image-group
+                  data-project-image-count={imageLayout.count}
+                  data-project-image-columns={imageLayout.columns}
+                  aria-label={i18n.t('projects.listLabel')}
+                >
+                  {galleryImages.map((image, imageIndex) => (
+                    <figure
+                      class:list={[
+                        'project-image',
+                        imageLayout.isCollapsible &&
+                          imageIndex >= imageLayout.visibleCount &&
+                          'is-extra',
+                      ]}
+                    >
+                      <Image
+                        src={image}
+                        alt=""
+                        widths={[360, 520, 720]}
+                        sizes="(max-width: 720px) 100vw, 420px"
+                      />
+                    </figure>
+                  ))}
+                  {imageLayout.isCollapsible && (
+                    <button
+                      class="project-image-toggle"
+                      type="button"
+                      aria-expanded="false"
+                      data-project-image-toggle
+                      data-expand-label={`展开 ${imageLayout.hiddenCount} 张`}
+                      data-collapse-label="收起图片"
+                    >
+                      展开 {imageLayout.hiddenCount} 张
+                    </button>
+                  )}
+                </div>
+              )}
               <p>{project.data.description}</p>
               <footer class="project-card-footer">
                 <span class="project-meta">
@@ -161,6 +247,38 @@ function withBase(href: string) {
   }
 </BlogArticle>
 
+<script>
+  import { mountProjectThread } from './lib/project-thread';
+
+  mountProjectThread();
+
+  const mountProjectImageToggles = () => {
+    document
+      .querySelectorAll<HTMLButtonElement>('[data-project-image-toggle]')
+      .forEach((button) => {
+        if (button.dataset.projectImageToggleBound === 'true') {
+          return;
+        }
+
+        button.dataset.projectImageToggleBound = 'true';
+
+        button.addEventListener('click', () => {
+          const group = button.closest<HTMLElement>('[data-project-image-group]');
+
+          if (!group) return;
+
+          const isExpanded = group.classList.toggle('is-expanded');
+          button.setAttribute('aria-expanded', String(isExpanded));
+          button.textContent = isExpanded
+            ? (button.dataset.collapseLabel ?? '收起图片')
+            : (button.dataset.expandLabel ?? '展开图片');
+        });
+      });
+  };
+
+  mountProjectImageToggles();
+</script>
+
 <style>
   .project-meta,
   .project-authors,
@@ -177,21 +295,74 @@ function withBase(href: string) {
     line-height: 1.78;
   }
 
-  .project-grid {
+  .project-stream {
+    position: relative;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(12px, 2vw, 22px);
+    gap: clamp(58px, 8vw, 124px);
     margin-top: 34px;
+    padding-bottom: clamp(24px, 7vw, 72px);
+  }
+
+  .project-stream::before {
+    position: absolute;
+    top: clamp(0.3rem, 1.4vw, 0.72rem);
+    right: clamp(0.2rem, 2vw, 1.2rem);
+    width: clamp(3.9rem, 7.8vw, 5.4rem);
+    height: clamp(2.6rem, 5.2vw, 3.6rem);
+    background: currentColor;
+    color: color-mix(in srgb, var(--paper-accent) 64%, var(--paper-ink-faint));
+    content: '';
+    -webkit-mask: var(--project-flight-icon) center / contain no-repeat;
+    mask: var(--project-flight-icon) center / contain no-repeat;
+    opacity: 0.34;
+    pointer-events: none;
+    transform: rotate(-9deg);
+  }
+
+  .project-thread {
+    position: absolute;
+    inset: -28px 0 -24px;
+    z-index: 0;
+    width: 100%;
+    height: calc(100% + 52px);
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .project-thread-path,
+  .project-thread-grain {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .project-thread-path {
+    stroke: url('#project-pencil-fade');
+    stroke-width: 1.45;
+    opacity: 0.54;
+  }
+
+  .project-thread-grain {
+    stroke: var(--paper-ink-faint);
+    stroke-dasharray: 1 9;
+    stroke-width: 1.05;
+    filter: url('#project-pencil-texture');
+    opacity: 0.28;
   }
 
   .project-card {
+    position: relative;
+    z-index: 1;
     display: grid;
     gap: 14px;
-    min-height: 196px;
+    width: min(100%, 660px);
     padding: 16px;
     color: var(--paper-ink);
     font-family: var(--font-ui-label);
     border-radius: 8px;
+    animation: project-arrive 520ms both;
+    animation-delay: calc(var(--project-index) * 72ms);
     transition:
       transform 180ms ease,
       background 180ms ease;
@@ -202,11 +373,155 @@ function withBase(href: string) {
     transform: translateY(-1px);
   }
 
+  .project-card.left {
+    justify-self: start;
+    text-align: left;
+  }
+
+  .project-card.left .project-dot {
+    right: -28px;
+  }
+
+  .project-card.right {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .project-card.right .project-dot {
+    left: -28px;
+  }
+
+  .project-card:nth-child(3n + 1) {
+    transform: translateX(2vw);
+  }
+
+  .project-card:nth-child(3n + 2) {
+    transform: translateX(-3vw);
+  }
+
+  .project-card:nth-child(3n) {
+    transform: translateX(0);
+  }
+
+  .project-dot {
+    position: absolute;
+    top: 0.5rem;
+    width: 0.52rem;
+    height: 0.52rem;
+    border: 1px solid rgba(144, 153, 143, 0.42);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 44% 44%, rgba(144, 153, 143, 0.5) 0 18%, transparent 19%),
+      var(--paper-bg);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--paper-bg) 78%, transparent);
+    opacity: 0.72;
+  }
+
+  .project-images {
+    --project-image-active-columns: var(--project-image-columns);
+    --project-image-gap: 10px;
+    --project-image-cell: clamp(132px, 21vw, 172px);
+
+    display: grid;
+    grid-template-columns: repeat(var(--project-image-active-columns), minmax(0, 1fr));
+    gap: var(--project-image-gap);
+    margin: 4px 0 8px;
+    width: min(
+      100%,
+      calc(
+        (var(--project-image-columns) * var(--project-image-cell)) +
+          ((var(--project-image-columns) - 1) * var(--project-image-gap))
+      )
+    );
+  }
+
+  .project-card.right .project-images {
+    margin-left: auto;
+  }
+
+  .project-images[data-project-image-count='1'] {
+    width: min(100%, 420px);
+  }
+
+  .project-image {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    opacity: 0.94;
+    rotate: -0.6deg;
+  }
+
+  .project-images[data-project-image-count='1'] .project-image {
+    aspect-ratio: auto;
+  }
+
+  .project-image.is-extra {
+    display: none;
+  }
+
+  .project-images.is-expanded .project-image.is-extra {
+    display: block;
+  }
+
+  .project-image:nth-child(even) {
+    rotate: 0.7deg;
+  }
+
+  .project-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    filter: saturate(0.86) contrast(0.98);
+    object-fit: cover;
+  }
+
+  .project-images[data-project-image-count='1'] .project-image img {
+    height: auto;
+    object-fit: initial;
+  }
+
+  .project-image-toggle {
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin: 4px 0 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--paper-ink-faint);
+    cursor: pointer;
+    font-family: var(--font-meta);
+    font-size: 0.68rem;
+    line-height: 1.8;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 28%, transparent);
+    text-underline-offset: 0.28em;
+    opacity: 0.78;
+    transition:
+      color 160ms ease,
+      opacity 160ms ease;
+  }
+
+  .project-image-toggle:hover,
+  .project-image-toggle:focus-visible {
+    color: var(--paper-ink-soft);
+    opacity: 1;
+  }
+
   .project-card-heading {
     display: flex;
     gap: 11px;
     align-items: center;
   }
+
+  .project-card.right .project-card-heading {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+  }
+
   .project-icon {
     flex: none;
     color: var(--project-icon-color, var(--paper-accent));
@@ -249,6 +564,10 @@ function withBase(href: string) {
     -webkit-line-clamp: 3;
   }
 
+  .project-card.right p {
+    margin-left: auto;
+  }
+
   .project-card-footer,
   .project-tags,
   .project-authors,
@@ -260,13 +579,13 @@ function withBase(href: string) {
   }
 
   .project-card-footer {
-    display: -webkit-box;
     align-self: end;
-    overflow: hidden;
     gap: 8px 12px;
     line-height: 1.6;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+  }
+
+  .project-card.right .project-card-footer {
+    justify-content: flex-end;
   }
 
   .project-card-footer > * {
@@ -329,9 +648,53 @@ function withBase(href: string) {
     box-shadow: var(--paper-shadow);
   }
 
+  @keyframes project-arrive {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
   @media (max-width: 720px) {
-    .project-grid {
-      grid-template-columns: 1fr;
+    .project-stream {
+      gap: 68px;
+    }
+
+    .project-stream::before {
+      top: 0.2rem;
+      right: 0.4rem;
+      width: 3.18rem;
+      height: 2.12rem;
+    }
+
+    .project-thread {
+      display: none;
+    }
+
+    .project-card,
+    .project-card:nth-child(3n + 1),
+    .project-card:nth-child(3n + 2),
+    .project-card:nth-child(3n) {
+      justify-self: stretch;
+      width: 100%;
+      max-width: none;
+      transform: none;
+    }
+
+    .project-dot {
+      display: none;
+    }
+
+    .project-images[data-project-image-columns='3'],
+    .project-images[data-project-image-columns='4'] {
+      --project-image-active-columns: 2;
+    }
+
+    .project-images {
+      width: 100%;
     }
 
     .project-card,

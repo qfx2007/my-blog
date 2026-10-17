@@ -10,6 +10,22 @@ size: lg
 images:
   - ../../assets/figure/tuPian1.webp
   - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
+  - ../../assets/figure/tuPian2.jpg
 ---
 
 给博客开了第一条 vibe，放两张最近存的图。

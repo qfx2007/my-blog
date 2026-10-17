@@ -2,7 +2,7 @@
 title: 'onLoad / onShow 触发时机与页面生命周期差异'
 description: '整理小程序中 onLoad、onShow、onHide、onUnload 的触发时机，以及 tabBar 页面与普通非 tab 页面的生命周期差异和跳转方式对页面栈的影响。'
 date: '2026-10-15T12:00:00+08:00'
-draft: false
+draft: true
 tags:
   - 小程序
   - uni-app

@@ -513,6 +513,7 @@ const projects = defineCollection({
         )
         .optional()
         .default([]),
+      images: z.array(contentImageSchema(context)).optional().default([]),
     }),
 });
 

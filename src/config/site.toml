@@ -36,8 +36,8 @@ collapseStyle = "collapsible-auto"
 render = "katex" # "katex" | "mathjax"
 
 [config.comments]
-enabled = false
-provider = "none"
+enabled = true
+provider = "giscus"
 show_on_posts = true
 
 [config.search]
@@ -90,15 +90,15 @@ subtitle = "读过、看过、听过的作品，以及一点当时的感受。"
 note = "一页浏览书、电影、剧集、专辑与播客。"
 
 [config.comments.giscus]
-repo = ""
-repo_id = ""
-category = ""
-category_id = ""
+repo = "qfx2007/my-blog"
+repo_id = "R_kgDOVB3d-g"
+category = "General"
+category_id = "DIC_kwDOVB3d-s4DIrov"
 mapping = "pathname"
 strict = "0"
 reactions_enabled = "1"
 emit_metadata = "0"
-input_position = "top"
+input_position = "bottom"
 light_theme = "light"
 dark_theme = "dark"
 lang = "zh-CN"
@@ -138,9 +138,10 @@ module = "projects"
 label = "文章"
 href = "/blog"
 
-[[config.topNav.links]]
-label = "Vibe"
-module = "vibe"
+# 暂时注释掉顶部vibe页面导航部分
+# [[config.topNav.links]]
+# label = "Vibe"
+# module = "vibe"
 
 # 暂时注释掉顶部media导航部分
 # [[config.topNav.links]]
