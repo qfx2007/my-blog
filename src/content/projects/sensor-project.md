@@ -1,5 +1,5 @@
 ---
-title: 物联网传感器项目
+title: 面向物联网的传感器全栈项目
 description: 一个面向物联网传感器设备数据监测和管理的平台
 date: 2026-10-16
 heroImage: ../../assets/figure/tuPian2.jpg

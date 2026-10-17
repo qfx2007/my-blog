@@ -156,8 +156,8 @@ href = "/about"
 
 [config.home.quote]
 text = [
-  "保持好奇,认真记录,",
-  "好好生活.",
+  "我的开发学习自留地, 写下笔记,",
+  "留存思考。",
 ]
 
 [config.home.intro]
