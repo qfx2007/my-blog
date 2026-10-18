@@ -52,6 +52,7 @@ interface Props {
   headerVariant?: 'default' | 'archive';
   headerKicker?: string;
   headerNote?: string;
+  showMetaLine?: boolean;
   title?: string;
   description?: string;
   date?: Date;
@@ -170,6 +171,7 @@ const hasSidebar = shouldRenderSidebar && hasToc;
             variant={props.headerVariant}
             kicker={props.headerKicker}
             note={props.headerNote}
+            showMetaLine={props.showMetaLine}
             pathname={Astro.url.pathname}
             showPageView={isBlogPost}
           />

@@ -24,6 +24,7 @@ interface Props {
   variant?: 'default' | 'archive';
   kicker?: string;
   note?: string;
+  showMetaLine?: boolean;
   pathname?: string;
   showPageView?: boolean;
 }
@@ -42,6 +43,7 @@ const {
   variant = 'default',
   kicker = 'Notebook entry',
   note,
+  showMetaLine = true,
   pathname = Astro.url.pathname,
   showPageView = false,
 } = Astro.props;
@@ -72,27 +74,29 @@ const wordCountLabel = ui.article.wordCount(wordCount);
           <h1 class="archive-title" data-pagefind-meta="title">
             {title}
           </h1>
-          <div class="meta-line" aria-label={ui.article.metadata}>
-            {date && (
-              <MetadataItem kind="date" separated={false}>
-                <FormattedDate date={date} />
+          {showMetaLine && (
+            <div class="meta-line" aria-label={ui.article.metadata}>
+              {date && (
+                <MetadataItem kind="date" separated={false}>
+                  <FormattedDate date={date} />
+                </MetadataItem>
+              )}
+              <MetadataItem kind="words" separated={Boolean(date)}>
+                {wordCountLabel}
               </MetadataItem>
-            )}
-            <MetadataItem kind="words" separated={Boolean(date)}>
-              {wordCountLabel}
-            </MetadataItem>
-            <MetadataItem kind="reading">{readingTime}</MetadataItem>
-            {showPageView && <PageView pathname={pathname} />}
-            {hasTags && (
-              <MetadataItem kind="tags" class="tag-list">
-                {tagLinks.map((tag) => (
-                  <a class="tag" href={`${basePath}/tags/${tag.slug}/`}>
-                    #{tag.name}
-                  </a>
-                ))}
-              </MetadataItem>
-            )}
-          </div>
+              <MetadataItem kind="reading">{readingTime}</MetadataItem>
+              {showPageView && <PageView pathname={pathname} />}
+              {hasTags && (
+                <MetadataItem kind="tags" class="tag-list">
+                  {tagLinks.map((tag) => (
+                    <a class="tag" href={`${basePath}/tags/${tag.slug}/`}>
+                      #{tag.name}
+                    </a>
+                  ))}
+                </MetadataItem>
+              )}
+            </div>
+          )}
           {hasGroups && (
             <div class="group-meta-line" aria-label={ui.article.groups}>
               {hasCategories && (
