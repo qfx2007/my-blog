@@ -47,10 +47,10 @@ placeholder = "Search notes..."
 maxResults = 6
 
 [config.pages.blog]
-title = "Writing notes"
-kicker = "Notebook archive"
-subtitle = "Notes from the margins."
-note = "Field notes, drafts, and technical margins arranged for slow browsing."
+title = "Writings"
+kicker = "Writings archive"
+subtitle = "零散笔记与技术复盘，记下沿途所思所想"
+note = "Scattered notes, technical reviews, and thoughts jotted down along the way."
 postsPerPage = 6
 # date-fns 使用的日期格式模板。
 dateFormat = "yyyy-MM-dd"
@@ -72,10 +72,10 @@ subtitle = ""
 note = "Connected notes that can be followed in the order they were written."
 
 [config.pages.projects]
-title = "Projects"
-kicker = "Project shelf"
-subtitle = "Small tools and site systems."
-note = "A compact shelf for implementation choices, releases, and publishing experiments."
+title = "Portfolio"
+kicker = "Portfolio shelf"
+subtitle = "收纳演示、项目与亲手落地的实践方案"
+note = "A collection of demos, projects and hands-on practice implementations."
 
 [config.pages.vibe]
 title = "vibe"
@@ -164,8 +164,8 @@ text = [
 title = "here is my blog"
 name = "my blog"
 body = [
-  "一个探索 AI全栈方向的开发学习者，喜欢折腾，也愿意沉淀。",
-  "项目、文章、成长，都在这里。",
+  "一个在 AI全栈方向 探索的求职者, 热爱技术、常试新工具, 也热爱生活。",
+  "项目、文章、成长, 都在这里。",
   "如果你是 HR 或面试官，欢迎看看我的作品集；如果只是路过，也欢迎随便逛逛。",
 ]
 
@@ -178,22 +178,22 @@ startDate = ""
 dateArchiveBaseHref = ""
 # 以下三个基数只影响首页统计数字的显示值（显示 = 基数 + 实时计算），
 # 不影响下方热力图格子；改为 0 即恢复纯真实值。
-totalPostsBase = 45
+totalPostsBase = 0
 activeDaysBase = 30
 dayStreakBase = 12
 
 # 右侧导航栏部分
 [[config.home.navigation]]
 icon = "pen"
-title = "文章"
-subtitle = "Essays, notes, and field reports"
+title = "Writings archive"
+subtitle = "文稿归档"
 href = "/blog"
 
 [[config.home.navigation]]
 icon = "briefcase"
-title = "作品集"
-subtitle = "待完善..."
-href = "/vibe"
+title = "Portfolio shelf"
+subtitle = "作品集展台"
+href = "/projects"
 
 
 [[config.home.links]]
