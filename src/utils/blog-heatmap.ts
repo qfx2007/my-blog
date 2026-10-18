@@ -153,12 +153,27 @@ export function createRecentBlogHeatmap(
     currentStreak += 1;
   }
 
+  // 活跃天数按建站以来全部文章的发布日期去重统计（只增不减），
+  // 与窗口无关；排除未来日期的草稿排期。
+  const todayKey = getDateKey(today);
+  const activeDayKeys = new Set<string>();
+
+  for (const post of posts) {
+    const key = getDateKey(post.data.date);
+
+    if (key > todayKey) {
+      continue;
+    }
+
+    activeDayKeys.add(key);
+  }
+
   return {
     days,
     weeks: safeWeeks,
     startDate: getDateKey(start),
     totalPosts: posts.length,
-    activeDays: days.filter((day) => day.count > 0).length,
+    activeDays: activeDayKeys.size,
     currentStreak,
     latestPosts: getLatestPosts(posts, latestCount),
   };

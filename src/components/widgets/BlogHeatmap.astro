@@ -12,6 +12,9 @@ interface Props {
   excludeDraft?: boolean;
   dateArchiveBaseHref?: string;
   startDate?: Date | string | null;
+  totalPostsBase?: number;
+  activeDaysBase?: number;
+  dayStreakBase?: number;
 }
 
 const {
@@ -21,6 +24,9 @@ const {
   excludeDraft = true,
   dateArchiveBaseHref,
   startDate,
+  totalPostsBase = 0,
+  activeDaysBase = 0,
+  dayStreakBase = 0,
 } = Astro.props;
 const posts = await getCollection('blog', ({ data }) => !excludeDraft || !data.draft);
 const heatmap = createRecentBlogHeatmap(posts, weeks, latestCount, startDate);
@@ -59,15 +65,15 @@ function getDayHref(day: HeatmapDay) {
 <article class="glass-card heatmap-card">
   <div class="stats-row">
     <div class="stat-item">
-      <strong>{heatmap.totalPosts}</strong>
+      <strong>{heatmap.totalPosts + totalPostsBase}</strong>
       <span>{ui.heatmap.totalPosts}</span>
     </div>
     <div class="stat-item">
-      <strong>{heatmap.activeDays}</strong>
+      <strong>{heatmap.activeDays + activeDaysBase}</strong>
       <span>{ui.heatmap.activeDays}</span>
     </div>
     <div class="stat-item">
-      <strong>{heatmap.currentStreak}</strong>
+      <strong>{heatmap.currentStreak + dayStreakBase}</strong>
       <span>{ui.heatmap.dayStreak}</span>
     </div>
   </div>

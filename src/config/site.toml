@@ -176,6 +176,11 @@ showHeatmapLatest = true
 excludeDraft = true
 startDate = ""
 dateArchiveBaseHref = ""
+# 以下三个基数只影响首页统计数字的显示值（显示 = 基数 + 实时计算），
+# 不影响下方热力图格子；改为 0 即恢复纯真实值。
+totalPostsBase = 45
+activeDaysBase = 30
+dayStreakBase = 12
 
 # 右侧导航栏部分
 [[config.home.navigation]]
