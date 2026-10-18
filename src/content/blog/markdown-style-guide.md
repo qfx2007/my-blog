@@ -1,7 +1,7 @@
 ---
 title: 'Markdown 语法渲染示例'
 description: '这是一篇汇总了常用 Markdown 语法在 Astro 里的渲染样例，写作时可以对照源码与预览效果，快速查阅参考。'
-date: '2026-05-19T00:00:00+08:00'
+date: '2026-08-6'
 draft: false
 heroImage: '/src/assets/figure/blog-sample-picture.png'
 showHeroImage: true

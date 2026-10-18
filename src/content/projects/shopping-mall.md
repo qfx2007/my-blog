@@ -1,12 +1,14 @@
 ---
 title: 电商前端项目
-description: '一个面向移动端的 Vue 2 电商前端项目，覆盖商品展示、购物车、用户登录、订单结算等核心电商链路。'
+description: '一个面向移动端的 Vue 2 电商前端项目，涵盖商品展示、购物车、用户登录、订单结算等核心电商模块功能。'
 date: '2025-02-01T00:00:00+08:00'
-icon: rocket
+icon: layers-3
 iconColor: '#e07a5f'
 images:
   - ../../assets/figure/shopping-mall01.png
   - ../../assets/figure/shopping-mall02.png
+  - ../../assets/figure/shopping-mall03.png
+  - ../../assets/figure/shopping-mall04.png
 tags:
   - Vue 2
   - E-commerce
@@ -59,13 +61,15 @@ src/
     pay/              支付页
   App.vue             根组件
   main.js             入口文件
-工程化实践
+```
+
+## 工程化实践
 - 移动端适配：PostCSS + px-to-viewport，自动将 px 转换为 vw
 - 状态管理：Vuex 按模块拆分，购物车数据与 localStorage 持久化同步
 - 路由鉴权：全局前置守卫拦截未登录用户访问订单、支付页面
 - 请求封装：Axios 统一实例，按业务模块拆分接口文件
 - 组件化：Vant 2 组件库 + 公共组件抽取 + Less 变量统一主题
-技术栈
+## 技术栈
 - Vue 2.6 + Vue CLI 5
 - Vue Router 3
 - Vuex 3
@@ -73,12 +77,12 @@ src/
 - Axios
 - Less + PostCSS
 - ESLint
-适合用在什么地方
+## 适合用在什么地方
 - 学习 Vue 2 电商开发的完整业务场景
 - 了解移动端 vw 适配方案
 - 参考 Vuex 模块化状态管理实践
 - 参考 Axios 请求层封装与路由鉴权实现
-后续可以扩展什么
+## 后续可以扩展什么
 - 接入真实后端替换课程接口
 - 增加商品收藏、优惠券等电商功能
 - 迁移到 Vue 3 + Vite
