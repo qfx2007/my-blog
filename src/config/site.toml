@@ -1,9 +1,9 @@
 [config.site]
 title = "Q的小站"
-description = "A personal navigation portfolio starter built with Astro."
-pageTitle = "navfolio | Digital Publication Space"
-pageDescription = "A calm AI-native personal publication space for notes, links, and writing."
-url = "https://astro.navfolio.site"
+description = "Q 的个人博客，记录 探索AI 全栈方向过程中的笔记、作品集合与生活随笔。"
+pageTitle = "Q's Blog | Projects, Notes & Growth"
+pageDescription = "Q 的个人博客，记录 探索AI 全栈方向过程中的笔记、作品集合与生活随笔。"
+url = "https://blog.20070228.xyz"
 repository = "https://github.com/qfx2007/my-blog"
 footerNote = "用作品表达、用文章记录。"
 
@@ -164,7 +164,7 @@ text = [
 title = "here is my blog"
 name = "my blog"
 body = [
-  "一个在 AI全栈方向 探索的求职者, 热爱技术、 也热爱生活。",
+  "一个正在 AI全栈方向 探索的求职者,",
   "项目、文章、成长, 都在这里。",
   "如果你是 HR 或面试官，欢迎看看我的作品集；如果只是路过，也欢迎随便逛逛。",
 ]
@@ -225,6 +225,3 @@ copy = true
 text = "正在完善开发中..."
 mark = "01"
 
-[[config.home.doing]]
-text = "正在完善开发中..."
-mark = "02"

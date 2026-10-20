@@ -1,7 +1,7 @@
 ---
 title: 开始记录
 date: 2026-10-15T18:00:00+08:00
-draft: false
+draft: true
 type: mixed
 mood: fresh start
 tags: [vibe, 开始]

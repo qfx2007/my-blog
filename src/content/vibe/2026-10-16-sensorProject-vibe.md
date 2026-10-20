@@ -1,7 +1,7 @@
 ---
 title: 物联网传感器项目
 date: 2026-10-16T18:00:00+08:00
-draft: false
+draft: true
 type: mixed
 mood: fresh start
 tags: [vibe, 开始]

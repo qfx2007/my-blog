@@ -1,7 +1,7 @@
 {
-  "name": "navfolio",
-  "short_name": "navfolio",
-  "description": "A personal navigation portfolio starter built with Astro.",
+  "name": "Q的小站",
+  "short_name": "Q's blog",
+  "description": "Q 的个人博客，记录 探索AI 全栈方向过程中的笔记、作品集合与生活随笔。",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
