@@ -156,7 +156,7 @@ href = "/about"
 
 [config.home.quote]
 text = [
-  "我的开发学习自留地, 写下笔记,",
+  "我的开发学习自留地, 写下作品,",
   "留存思考。",
 ]
 
@@ -203,6 +203,12 @@ tooltip = "https://github.com/qfx2007"
 copy = false
 
 [[config.home.links]]
+label = "Gitee"
+icon = "gitee"
+tooltip = "https://gitee.com/qu-fangxiang"
+copy = false
+
+[[config.home.links]]
 label = "X"
 icon = "x"
 tooltip = "" # 留空会隐藏这个链接项。
@@ -224,4 +230,8 @@ copy = true
 [[config.home.doing]]
 text = "正在完善开发中..."
 mark = "01"
+
+[[config.home.doing]]
+text = "正在完善开发中..."
+mark = "02"
 
