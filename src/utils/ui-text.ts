@@ -21,6 +21,7 @@ type RawUiText = {
   locale: string;
   doing: {
     recently: string;
+    published: string;
   };
   heatmap: {
     totalPosts: string;

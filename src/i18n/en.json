@@ -1,7 +1,8 @@
 {
   "locale": "en",
   "doing": {
-    "recently": "Recently"
+    "recently": "Recently",
+    "published": "published"
   },
   "heatmap": {
     "totalPosts": "Total posts",

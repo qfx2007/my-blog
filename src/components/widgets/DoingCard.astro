@@ -1,4 +1,8 @@
 ---
+// 首页左侧"最近"卡：置顶手写条目（site.toml 的 [[config.home.doing]]）在前，
+// 之后按日期倒序接构建期自动统计的发布事件（文章 / 项目 / 随笔）。
+import { getCollection } from 'astro:content';
+import { Box, FileText, Sparkles } from 'lucide-astro';
 import Icon from '../Icon.astro';
 import { getSiteConfig } from '../../data/site';
 import { getUiText } from '../../utils/ui-text';
@@ -8,20 +12,106 @@ interface DoingItem {
   mark: string;
 }
 
-const { items } = Astro.props as { items: DoingItem[] };
+interface Props {
+  items?: DoingItem[];
+  /** 事件流总条数上限（置顶条目也占名额） */
+  maxItems?: number;
+}
+
+const { items = [], maxItems = 10 } = Astro.props;
+
+// 事件源：已发布的文章 / 项目（排除 index 落地页）/ 随笔，草稿不参与
+const [blogPosts, projects, vibeEntries] = await Promise.all([
+  getCollection('blog', ({ data }) => !data.draft),
+  getCollection('projects', ({ data }) => !data.draft),
+  getCollection('vibe', ({ data }) => !data.draft),
+]);
+
+type EventKind = 'article' | 'project' | 'vibe';
+
+interface FeedEvent {
+  kind: EventKind;
+  title: string;
+  date: Date;
+  href: string;
+}
+
+const events: FeedEvent[] = [
+  ...blogPosts.map((post) => ({
+    kind: 'article' as const,
+    title: post.data.title,
+    date: post.data.date,
+    href: `/blog/${post.id}/`,
+  })),
+  ...projects
+    .filter((project) => project.id !== 'index')
+    .map((project) => ({
+      kind: 'project' as const,
+      title: project.data.title,
+      date: project.data.date,
+      href: `/projects/${project.id}/`,
+    })),
+  // vibe 只有列表时间流、没有独立详情页，链接统一指向 /vibe/
+  ...vibeEntries.map((entry) => ({
+    kind: 'vibe' as const,
+    title: entry.data.title || entry.id,
+    date: entry.data.date,
+    href: '/vibe/',
+  })),
+].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+// 置顶手写条目占名额，自动事件补足到 maxItems 为止
+const visibleEvents = events.slice(0, Math.max(0, maxItems - items.length));
+
 const ui = getUiText(await getSiteConfig());
+// 与首页"最新"卡片一致的日期展示格式
+const formatDate = new Intl.DateTimeFormat(ui.locale, {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+});
+const kindIconMap = {
+  article: FileText,
+  project: Box,
+  vibe: Sparkles,
+} as const;
 ---
 
 <article class="glass-card doing-card">
   <h2><Icon name="calendar" /> {ui.doing.recently}</h2>
-  <ul>
+  <ul class="activity-feed" aria-label={ui.doing.recently}>
     {
       items.map((item) => (
-        <li>
-          <span>{item.text}</span>
-          <strong aria-hidden="true">{item.mark}</strong>
+        <li class="activity-item">
+          <span class="activity-badge pinned" aria-hidden="true">
+            📌
+          </span>
+          <span class="activity-text">{item.text}</span>
+          <strong class="activity-mark" aria-hidden="true">
+            {item.mark}
+          </strong>
         </li>
       ))
+    }
+    {
+      visibleEvents.map((event) => {
+        const EventIcon = kindIconMap[event.kind];
+
+        return (
+          <li class="activity-item">
+            <span class="activity-badge">
+              <EventIcon size={12} strokeWidth={1.9} aria-hidden="true" />
+            </span>
+            <span class="activity-text">
+              {ui.doing.published}
+              <a href={event.href}>{event.title}</a>
+            </span>
+            <time class="activity-date" datetime={event.date.toISOString()}>
+              {formatDate.format(event.date)}
+            </time>
+          </li>
+        );
+      })
     }
   </ul>
 </article>
@@ -55,38 +145,81 @@ const ui = getUiText(await getSiteConfig());
     color: var(--paper-accent);
   }
 
-  ul {
-    display: grid;
-    gap: 0;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  li {
+  /* 固定约 4 条内容的高度，超出时出现竖向滚动条 */
+  .activity-feed {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 32px;
-    gap: 12px;
-    align-items: center;
-    padding: 14px 0 14px 18px;
-    border-top: 1px solid var(--paper-line);
-    color: var(--paper-ink);
-    font-size: 0.98rem;
+    gap: 8px;
+    max-height: 164px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    scrollbar-width: thin;
   }
 
-  li::before {
+  /* 时间轴竖线：从每个圆徽标的圆心穿过 */
+  .activity-feed::before {
     position: absolute;
-    left: 0;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--paper-accent);
+    top: 8px;
+    bottom: 8px;
+    left: 10px;
+    width: 1px;
+    background: var(--paper-line);
     content: '';
+    pointer-events: none;
   }
 
-  strong {
-    font-size: 0.82rem;
-    text-align: right;
+  .activity-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) max-content;
+    gap: 10px;
+    align-items: center;
+    min-height: 34px;
+  }
+
+  .activity-badge {
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    color: var(--paper-accent);
+    font-size: 11px;
+    line-height: 1;
+    border: 1px solid var(--paper-line);
+    border-radius: 999px;
+    background: var(--paper-bg);
+  }
+
+  .activity-text {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--paper-ink-soft);
+    font-size: 0.88rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .activity-text a {
+    color: var(--paper-ink);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+
+  .activity-text a:hover,
+  .activity-text a:focus-visible {
+    color: var(--paper-accent);
+  }
+
+  .activity-mark,
+  .activity-date {
+    color: var(--paper-ink-faint);
+    font-family: var(--font-meta);
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
   }
 </style>

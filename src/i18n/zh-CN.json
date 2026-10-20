@@ -1,7 +1,8 @@
 {
   "locale": "zh-CN",
   "doing": {
-    "recently": "最近"
+    "recently": "最近",
+    "published": "发布了"
   },
   "heatmap": {
     "totalPosts": "总文章",
