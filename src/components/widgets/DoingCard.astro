@@ -145,7 +145,7 @@ const kindIconMap = {
     color: var(--paper-accent);
   }
 
-  /* 固定约 4 条内容的高度，超出时出现竖向滚动条 */
+  /* 固定约 4 条内容的高度，超出时可滚动 */
   .activity-feed {
     position: relative;
     display: grid;
@@ -155,7 +155,55 @@ const kindIconMap = {
     padding: 0;
     overflow-y: auto;
     list-style: none;
-    scrollbar-width: thin;
+  }
+
+  /* 注意：Chrome 121+ 只要元素上出现 scrollbar-width / scrollbar-color，
+     就会忽略下面整套 ::-webkit-scrollbar 规则并退回原生滚动条（带箭头和灰轨道），
+     所以标准属性只在不支持 webkit 伪元素的 Firefox 里生效，两套写法严格分开。 */
+  @supports selector(::-webkit-scrollbar) {
+    /* Chromium / Safari：完全接管滚动条，6px 细条 */
+    .activity-feed::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    /* 轨道透明，直接透出首页背景，不做灰底 */
+    .activity-feed::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    /* 滑块默认透明：鼠标不在卡片区域时整条滚动条不可见 */
+    .activity-feed::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 999px;
+    }
+
+    /* 去掉滚动条上下箭头按钮 */
+    .activity-feed::-webkit-scrollbar-button:vertical:start:decrement,
+    .activity-feed::-webkit-scrollbar-button:vertical:end:increment,
+    .activity-feed::-webkit-scrollbar-button:vertical:single-button {
+      display: none;
+      background: transparent;
+      height: 0;
+    }
+
+    /* 鼠标进入卡片区域时才显示滑块（轨道始终保持透明） */
+    .doing-card:hover .activity-feed::-webkit-scrollbar-thumb,
+    .activity-feed:focus-visible::-webkit-scrollbar-thumb {
+      background: var(--paper-ink-faint);
+    }
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    /* Firefox：默认完全隐藏滚动条，悬停或键盘聚焦时显示细滚动条 */
+    .activity-feed {
+      scrollbar-width: none;
+    }
+
+    .doing-card:hover .activity-feed,
+    .activity-feed:focus-visible {
+      scrollbar-width: thin;
+      scrollbar-color: var(--paper-ink-faint) transparent;
+    }
   }
 
   /* 时间轴竖线：从每个圆徽标的圆心穿过 */
