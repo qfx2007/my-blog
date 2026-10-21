@@ -136,7 +136,11 @@ function withBase(href: string) {
           <path class="project-thread-grain" data-project-thread-grain />
         </svg>
         {relatedProjects.map(({ project, galleryImages, imageLayout }, index) => {
-          const ProjectIcon = projectIcons[project.data.icon] ?? Github;
+          const projectIcon = project.data.icon;
+          // 图片图标（以 / 开头或带图片扩展名）走 <img>，内置名照旧查 lucide 表
+          const isImageIcon =
+            projectIcon.startsWith('/') || /\.(svg|png|webp|jpe?g|avif)$/i.test(projectIcon);
+          const ProjectIcon = projectIcons[projectIcon] ?? Github;
           const projectHref = withBase(`${projectsRoute}/${project.id}/`);
           const align = index % 2 === 0 ? 'left' : 'right';
 
@@ -151,7 +155,21 @@ function withBase(href: string) {
             >
               <span class="project-dot" data-project-dot aria-hidden="true" />
               <div class="project-card-heading">
-                <ProjectIcon class="project-icon" size={22} strokeWidth={1.55} aria-hidden="true" />
+                {isImageIcon ? (
+                  <img
+                    class="project-icon project-icon-image"
+                    src={withBase(projectIcon)}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <ProjectIcon
+                    class="project-icon"
+                    size={22}
+                    strokeWidth={1.55}
+                    aria-hidden="true"
+                  />
+                )}
                 <h2>
                   <a href={projectHref}>{project.data.title}</a>
                 </h2>
@@ -525,6 +543,12 @@ function withBase(href: string) {
   .project-icon {
     flex: none;
     color: var(--project-icon-color, var(--paper-accent));
+  }
+
+  /* 图片图标与 lucide 版本对齐同尺寸 */
+  .project-icon.project-icon-image {
+    width: 22px;
+    height: 22px;
   }
 
   .project-meta,

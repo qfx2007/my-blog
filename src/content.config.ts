@@ -473,21 +473,29 @@ const projects = defineCollection({
   schema: (context) =>
     articleSchema(context).extend({
       sticky: z.union([z.boolean(), z.number().positive()]).optional().default(false),
+      // 内置 lucide 图标名，或 public 下的图片路径（如 /images/icons/vue.png）
       icon: z
-        .enum([
-          'github',
-          'box',
-          'code-2',
-          'database',
-          'file-code-2',
-          'globe-2',
-          'layers-3',
-          'palette',
-          'rocket',
-          'sparkles',
-          'terminal',
-          'wand-sparkles',
-        ])
+        .string()
+        .refine(
+          (value) =>
+            [
+              'github',
+              'box',
+              'code-2',
+              'database',
+              'file-code-2',
+              'globe-2',
+              'layers-3',
+              'palette',
+              'rocket',
+              'sparkles',
+              'terminal',
+              'wand-sparkles',
+            ].includes(value) ||
+            value.startsWith('/') ||
+            /\.(svg|png|webp|jpe?g|avif)$/i.test(value),
+          'Use a built-in icon name or an image path (e.g. /images/icons/vue.png).',
+        )
         .optional()
         .default('github'),
       iconColor: z
