@@ -30,7 +30,7 @@ html {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 780px) 252px;
+  grid-template-columns: minmax(0, 1000px) 300px;
   gap: 48px;
   width: min(100%, var(--layout-shell-width));
   max-width: none;

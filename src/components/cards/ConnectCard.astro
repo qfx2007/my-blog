@@ -123,7 +123,8 @@ const { links } = Astro.props as { links: ConnectLink[] };
     outline-offset: 3px;
   }
 
-  :global(.connect-icon svg) {
+  :global(.connect-icon svg),
+  :global(.connect-icon img.site-icon) {
     width: 18px;
     height: 18px;
     flex: 0 0 auto;

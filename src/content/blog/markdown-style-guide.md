@@ -11,7 +11,7 @@ tags:
 categories:
   - 内容创作
 series:
-  - 内容创作
+  - 创作
 comments: true
 sidebar:
   enable: true

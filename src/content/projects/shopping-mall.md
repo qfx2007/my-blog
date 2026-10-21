@@ -1,7 +1,7 @@
 ---
 title: 电商前端项目
 description: '一个面向移动端的 Vue 2 电商前端项目，涵盖商品展示、购物车、用户登录、订单结算等核心电商模块功能。'
-date: '2026-10-20T00:00:00+08:00'
+date: '2026-7-20'
 icon: layers-3
 iconColor: '#e07a5f'
 images:
@@ -62,9 +62,9 @@ Shopping Mall 是一个面向移动端的电商项目，个人独立开发完成
 
 ### 首页商品展示、商品详情页面、分类浏览与搜索
 
-首页的数据来自一个**聚合接口** `getHomeData()`。后端把轮播图、宫格导航、推荐商品拆成不同「楼层」放在同一个响应里返回，前端**只需要请求一次**，就能拿到首页多个区域的数据，**减少首屏的接口调用次数**。组件在 `created` 中发起请求，再把对应楼层的数据分别赋值给 `bannerList`、`navList`、`proList`，模板中通过 `v-for` 渲染：`van-swipe` 渲染轮播图，`van-grid` 渲染宫格导航，`GoodsItem` 复用商品卡片渲染推荐列表。页面完全由**数据驱动**，后端调整楼层内容时，前端不需要修改渲染逻辑。
+首页的数据来自一个**聚合接口** `getHomeData()`。后端把轮播图、宫格导航、推荐商品拆成不同「楼层」放在同一个响应里返回，前端**只需要请求一次**，把对应楼层的数据分别赋值给 `bannerList`、`navList`、`proList`，模板中通过 `v-for` 渲染：`van-swipe` 渲染轮播图，`van-grid` 渲染宫格导航，`GoodsItem` 复用商品卡片渲染推荐列表,减少首屏的接口调用次数。组件在 `created` 中发起请求，再。页面完全由**数据驱动**，后端调整楼层内容时，前端不需要修改渲染逻辑。
 
-分类页采用「左侧一级分类 + 右侧二级分类」布局。页面初始化时**只调用一次** `getCategoryData()`，把**完整分类树**取回本地；左侧 `v-for` 渲染一级分类，点击时只修改 `activeIndex`，右侧直接读取**已缓存**的 `list[activeIndex].children`，**不会因为切换分类而重复请求接口**。右侧使用**可选链** `?.children`，避免数据还没返回时访问空值报错。点击二级分类后跳转 `/searchlist?categoryId=xxx`，**复用搜索结果页**，减少重复页面和重复的请求逻辑。
+分类页采用**左侧一级分类 + 右侧二级分类**布局。页面初始化时只调用一次 `getCategoryData()`，把完整分类树取回本地；左侧点击时只修改 `activeIndex`，右侧直接读取已缓存的 `list[activeIndex].children`，**不会因为切换分类而重复请求接口**。右侧使用**可选链** `?.children`，避免数据还没返回时访问空值报错。
 
 搜索入口页的关键词历史直接读写 `utils/storage.js` 的 `getHistory / setHistory`，**不经过后端接口**。搜索时先**去重再 `unshift` 置顶**，保证同一个关键词只出现一次，并且最近搜索排在最前；清空历史时**同时更新内存状态和 localStorage**，避免刷新后历史重新出现。搜索结果页与分类页**共用同一个列表页**：搜索入口传 `search`，分类入口传 `categoryId`，接口参数都是可选的，前端按实际参数调用 `getProList`，从而复用同一套渲染逻辑。
 
@@ -81,7 +81,7 @@ Shopping Mall 是一个面向移动端的电商项目，个人独立开发完成
 
 ### 用户登录与 token 鉴权
 
-登录页采用「手机号 + **图形验证码** + 短信验证码」流程：进入页面先获取图形验证码，接口返回 **base64 图片和唯一 `key`**；用户提交手机号和图形验证码后获取短信验证码，最后用手机号和短信验证码完成登录。前端在发送请求前用**正则校验**手机号和验证码格式，减少无效请求。短信按钮带 **60 秒倒计时**，通过定时器标记和秒数判断避免重复点击。
+登录页采用「手机号 + 图形验证码 + 短信验证码」流程：前端在发送请求前用**正则校验**手机号和验证码格式，减少无效请求。短信按钮带60 秒倒计时，通过定时器标记和秒数判断避免重复点击。
 
 鉴权分为**两层**：
 
@@ -102,7 +102,7 @@ Shopping Mall 是一个面向移动端的电商项目，个人独立开发完成
 - `mutations` 负责 `setCartList`、`toggleCheck`、`toggleAllCheck`、`changeCount`
 - `actions` 负责 `getCartAction`、`changeCountAction`、`delSelect`
 
-后端返回的购物车数据**不包含勾选状态**，拉取列表时前端给每条商品**补充 `isChecked` 字段**，由 Vuex 统一维护。数量修改采用**「本地优先更新」**：`changeCountAction` 先 `commit` 修改本地数量，再请求后端同步。这样点击加减号时**界面立即响应**，不需要等接口返回，交互更流畅。
+后端返回的购物车数据**不包含勾选状态**，拉取列表时前端给每条商品**补充 `isChecked` 字段**，由 Vuex 统一维护。数量修改采用**本地优先更新**：`changeCountAction` 先 `commit` 修改本地数量，再请求后端同步。这样点击加减号时**界面立即响应**，不需要等接口返回，交互更流畅。
 
 ![未加入商品的购物车页面](../../assets/figure/shopping-mall10.png)
 ![加入商品的购物车页面](../../assets/figure/shopping-mall11.png)
@@ -112,7 +112,7 @@ Shopping Mall 是一个面向移动端的电商项目，个人独立开发完成
 
 结算页 `views/pay/index.vue` **同时支持两种来源**：购物车结算传 `mode=cart` 和 `cartIds`；立即购买传 `mode=buyNow` 以及 `goodsId / goodsSkuId / goodsNum`。进入页面后根据 `mode` 调用 `checkOrder` 获取**订单明细和账户余额**，提交时调用 `submitOrder`。页面通过 `mixins: [loginConfirm]` **复用登录确认逻辑**。
 
-我的订单页 `views/myorder/index.vue` 使用 `van-tabs` 按「全部 / 待支付 / 待发货 / 待收货 / 待评价」切换，`watch` 监听 `active` 并设置 **`immediate: true`**，首次进入和切换 Tab 都会重新请求列表。同一个结算页用 `mode` **区分业务来源**，避免维护两个几乎相同的页面；订单列表接口按状态查询，Tab 的 `name` 直接作为 `dataType` 传给后端。后端返回的订单商品明细里**没有总件数**，前端拿到列表后遍历 `goods` **累加 `total_num`**，统一成一个展示字段。
+我的订单页 `views/myorder/index.vue` 使用 `van-tabs组件` 按「全部 / 待支付 / 待发货 / 待收货 / 待评价」切换，使用`watch` 监听 `active` 并设置 **`immediate: true`**，首次进入和切换 Tab 都会重新请求列表。同一个结算页用 `mode` 区分业务来源，避免维护两个几乎相同的页面。
 
 ![支付](../../assets/figure/shopping-mall12.png)
 ![结算](../../assets/figure/shopping-mall13.png)
