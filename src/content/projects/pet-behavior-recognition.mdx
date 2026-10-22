@@ -1,0 +1,33 @@
+---
+title: 宠物行为识别系统
+description: '一个基于 PyQt5 + YOLOv5 的桌面端智能宠物行为识别系统，支持图片、摄像头、视频三种输入源，可实时识别宠物活跃、进食、异常呕吐、休息四类行为。'
+date: '2026-10-21'
+tags:
+  - Python
+  - PyQt5
+  - YOLOv5
+  - LabelImg
+  - Deep-Learning
+
+authors:
+  - name: Q/项目负责人
+sidebar:
+  enable: true
+  toc: true
+  relatedPosts: true
+---
+
+
+宠物行为识别系统（IPBRS）是一个 Windows 平台下的桌面端 AI 应用：基于 **PyQt5** 构建图形界面，集成
+训练好的 **YOLOv5** 检测模型，对宠物的四类行为——**活跃（Active）、进食（Eating）、异常呕吐（Abnormal-vomiting）、休息（Rest）**——进行
+识别。系统支持**图片、摄像头实时流、本地视频文件**三种输入源，完成了从**数据收集标注、模型训练到桌面端部署运行**的完整链路。
+
+## 技术栈
+
+- Python + PyCharm（开发语言与 IDE）
+- PyQt5（桌面端 GUI 框架）
+- YOLOv5 + PyTorch（目标检测模型与训练）
+- OpenCV（图像/视频读取与处理）
+- LabelImg（数据集标注工具）
+- SQLite（识别结果与操作日志持久化，见设计规划）
+
