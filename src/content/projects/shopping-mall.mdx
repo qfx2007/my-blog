@@ -30,6 +30,7 @@ sidebar:
   relatedPosts: true
 ---
 
+import ImageGallery from '../../components/ImageGallery.astro';
 
 Shopping Mall 是一个面向移动端的电商项目，个人独立开发完成了电商核心链路的前端开发：首页商品展示与分类浏览、用户登录与鉴权、商品搜索与详情、购物车增删改查、订单结算等模块。
 
@@ -72,11 +73,17 @@ Shopping Mall 是一个面向移动端的电商项目，个人独立开发完成
 
 详情页使用**动态路由** `/prodetail/:id`，组件内通过 `this.$route.params.id` 获取商品 ID，并在 `created` 中**同时请求详情和评论**。两个请求互不依赖，**并发发出**可以缩短页面等待时间；评论接口通过 `limit` **只取前几条**用于首屏展示，减少不必要的数据传输。
 
-![首页](../../assets/figure/shopping-mall01.png)
-![分类页面](../../assets/figure/shopping-mall02.png)
-![搜索前](../../assets/figure/shopping-mall05.png)
-![搜索后](../../assets/figure/shopping-mall06.png)
-![商品详情](../../assets/figure/shopping-mall14.png)
+<ImageGallery>
+  ![首页](../../assets/figure/shopping-mall01.png)
+
+  ![分类页面](../../assets/figure/shopping-mall02.png)
+
+  ![搜索前](../../assets/figure/shopping-mall05.png)
+
+  ![搜索后](../../assets/figure/shopping-mall06.png)
+
+  ![商品详情](../../assets/figure/shopping-mall14.png)
+</ImageGallery>
 
 
 ### 用户登录与 token 鉴权
@@ -88,9 +95,13 @@ Shopping Mall 是一个面向移动端的电商项目，个人独立开发完成
 - **页面级**：`router/index.js` 维护 `authUrls = ['/pay', '/myorder']`，**全局前置守卫**检查 token，未登录时跳转登录页。部分页面需要登录后才能进入，就会在这一层被拦截。
 - **接口级**：`utils/request.js` 的**请求拦截器**从 Vuex 读取 token，写入 **`Access-Token` 请求头**，需要授权的接口无需在每个页面手动携带 token。
 
-![未登录的我的页面](../../assets/figure/shopping-mall07.png)
-![登录](../../assets/figure/shopping-mall08.png)
-![登录后的我的页面](../../assets/figure/shopping-mall09.png)
+<ImageGallery>
+  ![未登录的我的页面](../../assets/figure/shopping-mall07.png)
+
+  ![登录](../../assets/figure/shopping-mall08.png)
+
+  ![登录后的我的页面](../../assets/figure/shopping-mall09.png)
+</ImageGallery>
 
 
 ### 购物车增删改查
@@ -104,8 +115,11 @@ Shopping Mall 是一个面向移动端的电商项目，个人独立开发完成
 
 后端返回的购物车数据**不包含勾选状态**，拉取列表时前端给每条商品**补充 `isChecked` 字段**，由 Vuex 统一维护。数量修改采用**本地优先更新**：`changeCountAction` 先 `commit` 修改本地数量，再请求后端同步。这样点击加减号时**界面立即响应**，不需要等接口返回，交互更流畅。
 
-![未加入商品的购物车页面](../../assets/figure/shopping-mall10.png)
-![加入商品的购物车页面](../../assets/figure/shopping-mall11.png)
+<ImageGallery>
+  ![未加入商品的购物车页面](../../assets/figure/shopping-mall10.png)
+
+  ![加入商品的购物车页面](../../assets/figure/shopping-mall11.png)
+</ImageGallery>
 
 
 ### 我的订单与订单结算页面
@@ -114,8 +128,11 @@ Shopping Mall 是一个面向移动端的电商项目，个人独立开发完成
 
 我的订单页 `views/myorder/index.vue` 使用 `van-tabs组件` 按「全部 / 待支付 / 待发货 / 待收货 / 待评价」切换，使用`watch` 监听 `active` 并设置 **`immediate: true`**，首次进入和切换 Tab 都会重新请求列表。同一个结算页用 `mode` 区分业务来源，避免维护两个几乎相同的页面。
 
-![支付](../../assets/figure/shopping-mall12.png)
-![结算](../../assets/figure/shopping-mall13.png)
+<ImageGallery>
+  ![支付](../../assets/figure/shopping-mall12.png)
+
+  ![结算](../../assets/figure/shopping-mall13.png)
+</ImageGallery>
 
 
 ## 后续可以扩展什么

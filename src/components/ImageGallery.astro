@@ -1,0 +1,151 @@
+---
+// 详情页正文图片画廊：超过一行（首行）自动收起，点按钮展开/收起。
+// 每一行内的图片组相对正文水平居中；无 JS 时全部平铺，保证基本可读。
+interface Props {
+  /** 每行图片数（桌面端）；窄屏 ≤720px 自动变 1 */
+  columns?: number;
+}
+
+const { columns = 3 } = Astro.props;
+---
+
+<div class="article-image-gallery" data-article-gallery style={`--gallery-columns: ${columns};`}>
+  <slot />
+</div>
+
+<script>
+  const mountGalleries = () => {
+    document.querySelectorAll<HTMLElement>('[data-article-gallery]').forEach((gallery) => {
+      if (gallery.dataset.galleryReady === 'true') return;
+      gallery.dataset.galleryReady = 'true';
+
+      const items = Array.from(gallery.children);
+      if (items.length < 2) return;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'gallery-toggle';
+      button.setAttribute('aria-expanded', 'false');
+
+      // 当前断点下每行可见张数（读 CSS 变量，媒体查询改它）
+      const visibleCount = () => {
+        const raw = getComputedStyle(gallery).getPropertyValue('--gallery-columns').trim();
+        const parsed = Number.parseInt(raw, 10);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+      };
+
+      const sync = () => {
+        const hidden = Math.max(0, items.length - visibleCount());
+        if (hidden > 0) {
+          gallery.classList.add('is-collapsible');
+          if (!gallery.classList.contains('is-expanded')) {
+            button.textContent = `展开 ${hidden} 张`;
+          }
+          button.hidden = false;
+        } else {
+          gallery.classList.remove('is-collapsible', 'is-expanded');
+          button.hidden = true;
+        }
+        button.setAttribute('aria-expanded', String(gallery.classList.contains('is-expanded')));
+      };
+
+      button.addEventListener('click', () => {
+        const expanded = gallery.classList.toggle('is-expanded');
+        button.setAttribute('aria-expanded', String(expanded));
+        if (expanded) {
+          button.textContent = '收起图片';
+        } else {
+          sync();
+        }
+      });
+
+      gallery.appendChild(button);
+      sync();
+
+      const onResize = () => {
+        if (!gallery.isConnected) {
+          window.removeEventListener('resize', onResize);
+          return;
+        }
+        sync();
+      };
+      window.addEventListener('resize', onResize);
+    });
+  };
+
+  mountGalleries();
+  document.addEventListener('astro:page-load', mountGalleries);
+</script>
+
+<!-- 必须 global：按钮是 JS 动态创建、<p> 来自 slot，都不带 data-astro-cid，scoped 规则会全部失配 -->
+<style is:global>
+  /* flex 换行：每行独立 justify-content center，天然按行居中 */
+  .article-image-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    margin: 28px 0;
+  }
+
+  /* 子项是 mdx 生成的 <p>：归零段落外边距；basis = 每行 columns 张的均分宽度 */
+  .article-image-gallery > * {
+    flex: 0 1 calc((100% - (var(--gallery-columns, 3) - 1) * 14px) / var(--gallery-columns, 3));
+    min-width: 0;
+    margin: 0;
+  }
+
+  .article-image-gallery img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--paper-line);
+    border-radius: 8px;
+  }
+
+  /* 收起态：首行之外的图片隐藏（按钮不参与隐藏） */
+  .article-image-gallery.is-collapsible:not(.is-expanded)
+    > *:not(.gallery-toggle):nth-child(n + 4) {
+    display: none;
+  }
+
+  /* 展开按钮独占一整行、文字居中；视觉与 projects 列表页 project-image-toggle 一致（下划线文字链接） */
+  .gallery-toggle {
+    flex: 0 0 100%;
+    padding: 4px 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: var(--paper-ink-faint);
+    cursor: pointer;
+    font-family: var(--font-meta);
+    font-size: 0.68rem;
+    line-height: 1.8;
+    text-align: center;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 28%, transparent);
+    text-underline-offset: 0.28em;
+    opacity: 0.78;
+    transition:
+      color 160ms ease,
+      opacity 160ms ease;
+  }
+
+  .gallery-toggle:hover,
+  .gallery-toggle:focus-visible {
+    color: var(--paper-ink-soft);
+    opacity: 1;
+  }
+
+  /* 窄屏单列：一行 1 张 → 收起第 2 张起 */
+  @media (max-width: 720px) {
+    .article-image-gallery {
+      --gallery-columns: 1;
+    }
+
+    .article-image-gallery.is-collapsible:not(.is-expanded)
+      > *:not(.gallery-toggle):nth-child(n + 2) {
+      display: none;
+    }
+  }
+</style>
