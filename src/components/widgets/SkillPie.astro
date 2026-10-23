@@ -1,0 +1,447 @@
+---
+// 关于页职业技能饼图：左图例 + 右饼图，点击图例/扇区凸出对应数据项。
+// 数据由 MDX 里显式传入（与下方文字列表同源维护）；无 JS 时整个组件隐藏，
+// 信息由页面下方的文字列表兜底，保证基本可读。
+interface SkillItem {
+  name: string;
+  /** 等级权重：3 熟练 / 2 熟悉 / 1 了解——同时决定扇区角度与配色深浅 */
+  value: number;
+}
+
+interface Props {
+  items: SkillItem[];
+}
+
+const { items } = Astro.props;
+
+const levelMark = (value: number) => (value >= 3 ? '+++' : value === 2 ? '++' : '+');
+const levelName = (value: number) => (value >= 3 ? '熟练' : value === 2 ? '熟悉' : '了解');
+
+const count = (value: number) => items.filter((item) => item.value === value).length;
+const ariaSummary =
+  `职业技能分布饼图，共 ${items.length} 项：` +
+  `熟练 ${count(3)} 项、熟悉 ${count(2)} 项、了解 ${count(1)} 项。`;
+---
+
+<div class="skill-pie" data-skill-pie data-items={JSON.stringify(items)} hidden>
+  <!-- 自定义图例：原生 ECharts legend 点击会隐藏扇区，这里改为凸出交互 -->
+  <div class="skill-pie__legend">
+    {
+      items.map((item) => (
+        <button
+          type="button"
+          class="skill-pie__legend-item"
+          data-name={item.name}
+          aria-pressed="false"
+          aria-label={`${item.name}，${levelName(item.value)}${levelMark(item.value)}`}
+        >
+          <span class="skill-pie__swatch" data-swatch aria-hidden="true" />
+          <span class="skill-pie__legend-name">{item.name}</span>
+          <span class="skill-pie__legend-level" aria-hidden="true">
+            {levelMark(item.value)}
+          </span>
+        </button>
+      ))
+    }
+  </div>
+  <div class="skill-pie__chart" data-chart role="img" aria-label={ariaSummary}></div>
+</div>
+
+<script>
+  import * as echarts from 'echarts/core';
+  import { PieChart } from 'echarts/charts';
+  import { TooltipComponent } from 'echarts/components';
+  import { CanvasRenderer } from 'echarts/renderers';
+
+  echarts.use([PieChart, TooltipComponent, CanvasRenderer]);
+
+  interface SkillItem {
+    name: string;
+    value: number;
+  }
+
+  interface RegistryEntry {
+    chart: echarts.ECharts;
+    observer: ResizeObserver;
+    onThemeChange: () => void;
+  }
+
+  const registry = new Map<HTMLElement, RegistryEntry>();
+
+  const levelLabel = (value: number) =>
+    value >= 3 ? '熟练(+++)' : value === 2 ? '熟悉(++)' : '了解(+)';
+
+  const cssVar = (el: HTMLElement, name: string, fallback: string) => {
+    const raw = getComputedStyle(el).getPropertyValue(name).trim();
+    return raw || fallback;
+  };
+
+  const hexToHsl = (hex: string) => {
+    const normalized = hex.replace('#', '');
+    const full =
+      normalized.length === 3
+        ? normalized
+            .split('')
+            .map((c) => c + c)
+            .join('')
+        : normalized;
+    const r = Number.parseInt(full.slice(0, 2), 16) / 255;
+    const g = Number.parseInt(full.slice(2, 4), 16) / 255;
+    const b = Number.parseInt(full.slice(4, 6), 16) / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    let h = 0;
+    let s = 0;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+      else if (max === g) h = ((b - r) / d + 2) * 60;
+      else h = ((r - g) / d + 4) * 60;
+    }
+    return { h, s: s * 100, l: l * 100 };
+  };
+
+  const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+
+  // 配色：全部取当前主题的 --paper-accent 色相，熟练度越高越深；
+  // 同档内按序号做轻微明度/色相抖动，避免相邻同档扇区糊成一块
+  const buildColors = (host: HTMLElement, items: SkillItem[]) => {
+    const accent = cssVar(host, '--paper-accent', '#987451');
+    const { h, s, l } = hexToHsl(accent);
+    return items.map((item, index) => {
+      const tierL = item.value >= 3 ? 0 : item.value === 2 ? 9 : 17;
+      const jitterL = ((index * 37) % 7) - 3;
+      const jitterH = ((index * 53) % 11) - 5;
+      const light = clamp(l + tierL + jitterL, 14, 90);
+      const sat = clamp(s - (item.value === 1 ? 8 : 0), 10, 92);
+      return `hsl(${(h + jitterH + 360) % 360} ${sat}% ${light}%)`;
+    });
+  };
+
+  const buildOption = (host: HTMLElement, items: SkillItem[], colors: string[]) =>
+    ({
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: cssVar(host, '--paper-surface', '#fffffc'),
+        borderColor: cssVar(host, '--paper-line', 'rgba(31, 35, 40, 0.075)'),
+        textStyle: { color: cssVar(host, '--paper-ink', '#272d28'), fontSize: 12 },
+        formatter: (params: { name: string; percent: number; data: { value: number } }) =>
+          `${params.name} · ${levelLabel(params.data.value)} · ${params.percent}%`,
+      },
+      // 尊重系统减弱动效设置
+      animation: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      series: [
+        {
+          type: 'pie' as const,
+          radius: ['0%', '70%'],
+          center: ['50%', '50%'],
+          // multiple：可同时凸出多项；凸出位移见 selectedOffset
+          selectedMode: 'multiple' as const,
+          selectedOffset: 14,
+          itemStyle: {
+            borderColor: cssVar(host, '--paper-surface', '#fffffc'),
+            borderWidth: 1.5,
+            borderRadius: 3,
+          },
+          emphasis: { focus: 'self' as const },
+          data: items.map((item, index) => ({
+            name: item.name,
+            value: item.value,
+            itemStyle: { color: colors[index] },
+          })),
+        },
+      ],
+    }) as echarts.EChartsCoreOption;
+
+  const syncLegend = (host: HTMLElement, selectedNames: Set<string>) => {
+    host.querySelectorAll<HTMLButtonElement>('.skill-pie__legend-item').forEach((button) => {
+      const active = selectedNames.has(button.dataset.name ?? '');
+      button.setAttribute('aria-pressed', String(active));
+      button.classList.toggle('is-active', active);
+    });
+  };
+
+  // selectchanged 载荷：selected 为 [{ seriesIndex, dataIndex: number[] }]
+  // 选中态权威来源是 seriesModel.option.selectedMap，getOption 拷贝里读不到——统一从事件重建
+  const namesFromSelectedPayload = (
+    items: SkillItem[],
+    payload: { selected?: Array<{ seriesIndex: number; dataIndex: number | number[] }> },
+  ) => {
+    const names = new Set<string>();
+    for (const entry of payload.selected ?? []) {
+      if (entry.seriesIndex !== 0) continue;
+      for (const index of Array.isArray(entry.dataIndex) ? entry.dataIndex : [entry.dataIndex]) {
+        const name = items[index]?.name;
+        if (name) names.add(name);
+      }
+    }
+    return names;
+  };
+
+  const mount = (host: HTMLElement) => {
+    if (registry.has(host)) return;
+
+    let items: SkillItem[] = [];
+    try {
+      items = JSON.parse(host.dataset.items ?? '[]') as SkillItem[];
+    } catch {
+      return;
+    }
+    if (items.length === 0) return;
+
+    const chartEl = host.querySelector<HTMLElement>('[data-chart]');
+    if (!chartEl) return;
+
+    host.hidden = false;
+    const colors = buildColors(host, items);
+    // 图例色块与扇区同色，主题切换时一起刷新
+    host.querySelectorAll<HTMLElement>('[data-swatch]').forEach((swatch, index) => {
+      swatch.style.backgroundColor = colors[index];
+    });
+
+    const chart = echarts.init(chartEl);
+    chart.setOption(buildOption(host, items, colors));
+
+    // 图例悬停 → 扇区高亮 + tooltip；点击 → 凸出/收回（toggleSelect 由 core 分发）
+    const selectedNames = new Set<string>();
+    const legendButtons = host.querySelectorAll<HTMLButtonElement>('.skill-pie__legend-item');
+    legendButtons.forEach((button, index) => {
+      const name = button.dataset.name ?? '';
+      button.addEventListener('mouseenter', () => {
+        chart.dispatchAction({ type: 'highlight', seriesIndex: 0, name });
+        chart.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: index });
+      });
+      button.addEventListener('mouseleave', () => {
+        chart.dispatchAction({ type: 'downplay', seriesIndex: 0, name });
+        chart.dispatchAction({ type: 'hideTip' });
+      });
+      button.addEventListener('focus', () => {
+        chart.dispatchAction({ type: 'highlight', seriesIndex: 0, name });
+      });
+      button.addEventListener('blur', () => {
+        chart.dispatchAction({ type: 'downplay', seriesIndex: 0, name });
+      });
+      button.addEventListener('click', () => {
+        chart.dispatchAction({ type: 'toggleSelect', seriesIndex: 0, name });
+      });
+    });
+
+    // 扇区点击由 core 的 bindMouseEvent 自动 select/unselect（isFromClick），
+    // 不要再挂 chart.on('click') → toggleSelect——会和选中动画重绘互相触发死循环。
+    // 这里只用 selectchanged 统一驱动图例按下态（程序化派发与手动点击都走它）。
+    chart.on(
+      'selectchanged',
+      (params: { selected?: Array<{ seriesIndex: number; dataIndex: number | number[] }> }) => {
+        selectedNames.clear();
+        namesFromSelectedPayload(items, params).forEach((name) => selectedNames.add(name));
+        syncLegend(host, selectedNames);
+      },
+    );
+    // 扇区悬停 → 同步图例高亮
+    chart.on('mouseover', (params: { dataIndex?: number }) => {
+      if (params.dataIndex == null) return;
+      legendButtons[params.dataIndex]?.classList.add('is-hover');
+    });
+    chart.on('mouseout', (params: { dataIndex?: number }) => {
+      if (params.dataIndex == null) return;
+      legendButtons[params.dataIndex]?.classList.remove('is-hover');
+    });
+
+    const observer = new ResizeObserver(() => chart.resize());
+    observer.observe(chartEl);
+
+    // 主题切换：按新 CSS 变量重建配色，凸出状态按名字恢复
+    const onThemeChange = () => {
+      const nextColors = buildColors(host, items);
+      host.querySelectorAll<HTMLElement>('[data-swatch]').forEach((swatch, index) => {
+        swatch.style.backgroundColor = nextColors[index];
+      });
+      chart.setOption(buildOption(host, items, nextColors));
+      selectedNames.forEach((name) => {
+        chart.dispatchAction({ type: 'select', seriesIndex: 0, name });
+      });
+    };
+    window.addEventListener('navfolio:theme-change', onThemeChange);
+
+    registry.set(host, { chart, observer, onThemeChange });
+  };
+
+  const mountAll = () => {
+    document.querySelectorAll<HTMLElement>('[data-skill-pie]').forEach(mount);
+  };
+
+  mountAll();
+  document.addEventListener('astro:page-load', mountAll);
+
+  // 视图切换离开页面前释放实例与监听，避免泄漏
+  document.addEventListener('astro:before-swap', () => {
+    registry.forEach(({ chart, observer, onThemeChange }) => {
+      window.removeEventListener('navfolio:theme-change', onThemeChange);
+      observer.disconnect();
+      chart.dispose();
+    });
+    registry.clear();
+  });
+</script>
+
+<style>
+  /* 容器：桌面端图例在左、饼图在右；无 JS 时由 hidden 属性整体隐藏 */
+  .skill-pie {
+    display: flex;
+    gap: 1.5rem;
+    align-items: stretch;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .skill-pie[hidden] {
+    display: none;
+  }
+
+  /* 图例列：固定宽度，条目多时在列内滚动，不撑破版心 */
+  .skill-pie__legend {
+    flex: 0 0 11.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 28.75rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+
+  /* 注意：Chrome 121+ 只要元素上出现 scrollbar-width / scrollbar-color，
+     就会忽略下面整套 ::-webkit-scrollbar 规则并退回原生滚动条（带箭头和灰轨道），
+     所以标准属性只在不支持 webkit 伪元素的 Firefox 里生效，两套写法严格分开。
+     与首页 DoingCard 的 activity-feed 同一套模式。 */
+  @supports selector(::-webkit-scrollbar) {
+    /* Chromium / Safari：完全接管滚动条，6px 细条 */
+    .skill-pie__legend::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    /* 轨道透明，直接透出版心背景 */
+    .skill-pie__legend::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    /* 滑块默认透明：鼠标不在图例列区域时整条滚动条不可见 */
+    .skill-pie__legend::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 999px;
+    }
+
+    /* 去掉滚动条上下箭头按钮 */
+    .skill-pie__legend::-webkit-scrollbar-button:vertical:start:decrement,
+    .skill-pie__legend::-webkit-scrollbar-button:vertical:end:increment,
+    .skill-pie__legend::-webkit-scrollbar-button:vertical:single-button {
+      display: none;
+      background: transparent;
+      height: 0;
+    }
+
+    /* 鼠标进入图例列时才显示滑块（轨道始终保持透明） */
+    .skill-pie__legend:hover::-webkit-scrollbar-thumb,
+    .skill-pie__legend:focus-visible::-webkit-scrollbar-thumb {
+      background: var(--paper-ink-faint);
+    }
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    /* Firefox：默认完全隐藏滚动条，悬停或键盘聚焦时显示细滚动条 */
+    .skill-pie__legend {
+      scrollbar-width: none;
+    }
+
+    .skill-pie__legend:hover,
+    .skill-pie__legend:focus-visible {
+      scrollbar-width: thin;
+      scrollbar-color: var(--paper-ink-faint) transparent;
+    }
+  }
+
+  .skill-pie__legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    padding: 0.22rem 0.4rem;
+    margin: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--paper-ink-soft);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    text-align: left;
+    transition:
+      color 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .skill-pie__legend-item:hover,
+  .skill-pie__legend-item:focus-visible,
+  .skill-pie__legend-item.is-hover {
+    color: var(--paper-ink);
+    background: color-mix(in srgb, var(--paper-accent) 7%, transparent);
+    outline: none;
+  }
+
+  .skill-pie__legend-item.is-active {
+    color: var(--paper-ink);
+    background: color-mix(in srgb, var(--paper-accent) 12%, transparent);
+  }
+
+  .skill-pie__swatch {
+    flex: 0 0 0.55rem;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 2px;
+    background: var(--paper-accent);
+  }
+
+  .skill-pie__legend-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .skill-pie__legend-level {
+    color: var(--paper-ink-faint);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.68rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* 饼图区：高度固定，ECharts 依赖显式尺寸；窄屏由媒体查询压缩 */
+  .skill-pie__chart {
+    flex: 1;
+    min-width: 0;
+    height: 28.75rem;
+  }
+
+  @media (max-width: 640px) {
+    .skill-pie {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* 窄屏：饼图置顶，图例改为整行跟随（页面本身可纵向滚动）；
+       flex 必须重置为 none——column 布局下 flex:1 的 flex-basis:0% 会压掉 height */
+    .skill-pie__chart {
+      flex: none;
+      order: -1;
+      height: 20rem;
+    }
+
+    .skill-pie__legend {
+      flex: none;
+      max-height: none;
+      overflow-y: visible;
+    }
+  }
+</style>

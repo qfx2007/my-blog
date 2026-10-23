@@ -4,6 +4,8 @@ description: '关于 Q、关于这个小站，以及它是怎么搭起来的。'
 date: '2026-09-30'
 ---
 
+import SkillPie from '../components/widgets/SkillPie.astro';
+
 远方的朋友们，山水有相逢，很高兴能在这里和你们碰面
 
 这是一份关于我和本站的报告，请查收
@@ -14,6 +16,37 @@ date: '2026-09-30'
 
 
 ### 我的职业技能（了解:+，熟悉:++，熟练:+++）
+
+{/* 技能饼图：value 为等级权重（3 熟练 / 2 熟悉 / 1 了解），与下方文字列表同源维护 */}
+<SkillPie
+  items={[
+    { name: 'JavaScript', value: 3 },
+    { name: 'TypeScript', value: 2 },
+    { name: 'SQL', value: 2 },
+    { name: 'C', value: 2 },
+    { name: 'HTML/HTML5', value: 3 },
+    { name: 'CSS/Less/SCSS', value: 2 },
+    { name: 'Markdown', value: 2 },
+    { name: 'C++', value: 2 },
+    { name: 'Python', value: 1 },
+    { name: 'Java', value: 1 },
+    { name: 'Vue 2', value: 2 },
+    { name: 'Vue 3', value: 3 },
+    { name: 'uni-app', value: 3 },
+    { name: 'Express', value: 2 },
+    { name: 'Node.js', value: 3 },
+    { name: 'MQTT', value: 2 },
+    { name: 'EMQX', value: 2 },
+    { name: 'WebSocket', value: 2 },
+    { name: 'Webpack', value: 2 },
+    { name: 'Vite', value: 2 },
+    { name: 'React', value: 1 },
+    { name: 'YOLOv5', value: 2 },
+    { name: 'SpringBoot', value: 1 },
+    { name: 'PyQt5', value: 1 },
+    { name: '工具和其他', value: 2 },
+  ]}
+/>
 
 **语言**：
 - JavaScript +++
@@ -46,7 +79,7 @@ date: '2026-09-30'
 **工具和其他**：
 - AI Agent/AI Chat：opencode、codex、cursor、通义灵码
 - Git 平台：GitHub、Gitee
-- 容器：Docker +
+- 容器：Docker
 - 开发 IDE：VS Code、HBuilderX、IntelliJ IDEA、PyCharm
 
 ## 关于本站与未来

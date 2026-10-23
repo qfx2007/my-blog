@@ -7,9 +7,12 @@ interface Props {
 }
 
 const { columns = 3 } = Astro.props;
+// 默认列数写进样式表（媒体查询才能覆盖）；只有自定义列数才输出内联变量，
+// 因为内联样式永远压过 @media，会把窄屏单列锁死
+const columnsStyle = columns === 3 ? undefined : `--gallery-columns: ${columns};`;
 ---
 
-<div class="article-image-gallery" data-article-gallery style={`--gallery-columns: ${columns};`}>
+<div class="article-image-gallery" data-article-gallery style={columnsStyle}>
   <slot />
 </div>
 
@@ -19,7 +22,12 @@ const { columns = 3 } = Astro.props;
       if (gallery.dataset.galleryReady === 'true') return;
       gallery.dataset.galleryReady = 'true';
 
-      const items = Array.from(gallery.children);
+      // 只统计真正的图片段落：图片的 <dialog> 会被 HTML 解析器从 <p> 中拆出，
+      // 之后的 </p> 还会补插一个空 <p>——这些杂节点不能计入“张数”
+      const items = Array.from(gallery.children).filter(
+        (el): el is HTMLParagraphElement =>
+          el instanceof HTMLParagraphElement && Boolean(el.querySelector('img')),
+      );
       if (items.length < 2) return;
 
       const button = document.createElement('button');
@@ -35,15 +43,17 @@ const { columns = 3 } = Astro.props;
       };
 
       const sync = () => {
-        const hidden = Math.max(0, items.length - visibleCount());
+        const visible = visibleCount();
+        const hidden = Math.max(0, items.length - visible);
+        // 逐张打标控制隐藏：nth-child 会把拆出的 dialog/空 <p> 一起数进去导致错位
+        items.forEach((el, index) => el.classList.toggle('is-beyond-row', index >= visible));
         if (hidden > 0) {
-          gallery.classList.add('is-collapsible');
           if (!gallery.classList.contains('is-expanded')) {
             button.textContent = `展开 ${hidden} 张`;
           }
           button.hidden = false;
         } else {
-          gallery.classList.remove('is-collapsible', 'is-expanded');
+          gallery.classList.remove('is-expanded');
           button.hidden = true;
         }
         button.setAttribute('aria-expanded', String(gallery.classList.contains('is-expanded')));
@@ -79,13 +89,14 @@ const { columns = 3 } = Astro.props;
 
 <!-- 必须 global：按钮是 JS 动态创建、<p> 来自 slot，都不带 data-astro-cid，scoped 规则会全部失配 -->
 <style is:global>
-  /* flex 换行：每行独立 justify-content center，天然按行居中 */
+  /* flex 换行：每行独立 justify-content center，天然按行居中；列数默认值在此，供媒体查询覆盖 */
   .article-image-gallery {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 14px;
     margin: 28px 0;
+    --gallery-columns: 3;
   }
 
   /* 子项是 mdx 生成的 <p>：归零段落外边距；basis = 每行 columns 张的均分宽度 */
@@ -103,9 +114,25 @@ const { columns = 3 } = Astro.props;
     border-radius: 8px;
   }
 
-  /* 收起态：首行之外的图片隐藏（按钮不参与隐藏） */
-  .article-image-gallery.is-collapsible:not(.is-expanded)
-    > *:not(.gallery-toggle):nth-child(n + 4) {
+  /* ZoomableImage 包裹层在画廊内的适配：归零默认外边距和边框（边框留给 img），
+     撑满格子，避免双边框与每行高度不齐 */
+  .article-image-gallery .navfolio-zoomable {
+    display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  /* 收起态：首行之外的图片由 JS 打标隐藏；不用 nth-child——解析器拆出的
+     dialog/空 <p> 会让序号错位 */
+  .article-image-gallery:not(.is-expanded) > .is-beyond-row {
+    display: none;
+  }
+
+  /* <dialog> 被解析器拆出 </p> 后自动补插的空段落：不占 flex 格位 */
+  .article-image-gallery > p:empty {
     display: none;
   }
 
@@ -137,15 +164,10 @@ const { columns = 3 } = Astro.props;
     opacity: 1;
   }
 
-  /* 窄屏单列：一行 1 张 → 收起第 2 张起 */
+  /* 窄屏单列：媒体查询改列数，收起张数随 visibleCount 自动跟随（第 2 张起隐藏） */
   @media (max-width: 720px) {
     .article-image-gallery {
       --gallery-columns: 1;
-    }
-
-    .article-image-gallery.is-collapsible:not(.is-expanded)
-      > *:not(.gallery-toggle):nth-child(n + 2) {
-      display: none;
     }
   }
 </style>
