@@ -9,9 +9,9 @@ tags:
   - 'Markdown'
   - 'Astro'
 categories:
-  - 内容创作
+  - 笔记
 series:
-  - 创作
+  - 方法与技术
 comments: true
 sidebar:
   enable: true

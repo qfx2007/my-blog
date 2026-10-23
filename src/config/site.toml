@@ -154,6 +154,9 @@ href = "/about"
 
 [config.home]
 
+## 如何首页左侧最近部分，不想显示自己手动输入的“[[config.home.doing]]”部分，就把相关的这3行代码注释、添加上下面这一行代码
+doing = []
+
 [config.home.quote]
 text = [
   "我的开发学习自留地, 写下作品,",
@@ -227,11 +230,9 @@ tooltip = "2171334945@qq.com"
 copy = true
 
 
-[[config.home.doing]]
-text = "正在完善开发中..."
-mark = "01"
+# [[config.home.doing]]
+# text = "正在完善开发中..."
+# mark = "01"
 
-[[config.home.doing]]
-text = "正在完善开发中..."
-mark = "02"
+
 
