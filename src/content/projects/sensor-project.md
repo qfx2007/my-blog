@@ -1,9 +1,28 @@
 ---
-title: 面向物联网的传感器全栈项目
-description: 一个面向物联网传感器设备数据监测和管理的平台
+title: 一个面向物联网传感器设备的数据监测和管理平台
+description:   '一个基于 Vue 3 + Express + MQTT + MySQL 的前后端分离物联网平台，支持传感器数据实时监测、历史查询与统计分析、异常诊断联动和远程指令控制，默认适配水循环系统场景。'
 date: 2026-10-16
-heroImage: ../../assets/figure/tuPian2.jpg
-tags: [测试]
+images:
+  - ../../assets/figure/sensor01.png
+tags:
+  - Vue3
+  - uni-app
+  - Express
+  - Node.js
+  - JavaScript
+  - ECharts
+  - Vant
+  - Element Plus
+  - uView Plus
+  - MySQL
+  - MQTT
+  - WebSocket
+authors:
+  - name: Q/个人独立开发
+sidebar:
+  enable: true
+  toc: true
+  relatedPosts: true
 ---
 
-本项目是一个面向物联网传感器设备数据监测和管理的平台，围绕传感器数据实时监测显示、设备状态管理、行为数据分析、故障信息追踪与远程指令控制等核心能力构建，提供从数据接入、业务处理、可视化展示到设备联动控制的完整闭环。
+

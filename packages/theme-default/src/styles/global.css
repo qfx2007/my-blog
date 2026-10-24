@@ -197,10 +197,26 @@ table {
   width: max-content;
   min-width: 100%;
   border-collapse: collapse;
+  font-size: 0.95em;
 }
 
-.markdown-table-scroll th {
+.markdown-table-scroll th,
+.markdown-table-scroll td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--paper-line-strong);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-table-scroll thead th {
+  border-bottom: 2px solid var(--paper-line-strong);
+  background: var(--paper-surface-muted);
+  font-weight: 700;
   white-space: nowrap;
+}
+
+.markdown-table-scroll tbody tr:hover {
+  background: var(--paper-surface-muted);
 }
 
 img {
