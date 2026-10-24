@@ -138,6 +138,11 @@ module = "projects"
 label = "文章"
 href = "/blog"
 
+# 友链页：上方卡片墙 + 底部申请表单
+[[config.topNav.links]]
+label = "友链"
+href = "/friends"
+
 # 暂时注释掉顶部vibe页面导航部分
 # [[config.topNav.links]]
 # label = "Vibe"
@@ -149,7 +154,7 @@ href = "/blog"
 # module = "media"
 
 [[config.topNav.links]]
-label = "关于本站"
+label = "关于我和本站"
 href = "/about"
 
 [config.home]

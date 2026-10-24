@@ -1,0 +1,370 @@
+---
+// 友链页：双栏页头沿用全站列表页模式；主体是「空名片墙」空态——按 FriendLinkCard
+// 真实结构画 4 个虚线空位，展示这页将来会长成什么样。申请表单收进 <dialog>，点 CTA 才弹出。
+// 数据流：访客填表 → 生成 GitHub issue → 站长审核 → 手动把条目加进 friends 数组 → push 上线。
+// 有条目后空态自动换成 FriendLinkCard，CTA 与弹窗始终保留。
+import FriendLinkApplication from '@navfolio/mdx-components/FriendLinkApplication.astro';
+import FriendLinkCard from '@navfolio/mdx-components/FriendLinkCard.astro';
+import BlogArchiveHeader from '../components/blog/BlogArchiveHeader.astro';
+import { X } from 'lucide-astro';
+import { getSiteConfig } from '../data/site';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const { site } = await getSiteConfig();
+
+interface FriendItem {
+  name: string;
+  url: string;
+  bio?: string;
+  /** 头像用对方站点的外链图片地址 */
+  avatar?: string;
+  backgroundImage?: string;
+  /** 配上后未来友圈动态流可读取 */
+  rss?: string;
+}
+
+// 目前 0 条；有申请通过后在这里追加即可（形如 { name: 'XX', url: 'https://...' }）
+const friends: FriendItem[] = [];
+
+// 空态墙的占位卡数量：与 FriendLinkCard 桌面 4 列对齐
+const ghostSlots = [0, 1, 2, 3];
+
+const pageDescription = `${site.title} 的友链页，收录朋友们的站点，也提供友链申请入口。`;
+---
+
+<BaseLayout title={`友链 | ${site.title}`} description={pageDescription}>
+  <div class="publication-bg" aria-hidden="true"></div>
+  <main class="friends-shell" data-pagefind-body>
+    <BlogArchiveHeader kicker="Friends & links" title="友链" subtitle="愿结四方客，共织一张网。" />
+
+    {
+      friends.length > 0 ? (
+        <div class="friends-wall-wrap">
+          <FriendLinkCard items={friends} />
+        </div>
+      ) : (
+        <div class="friends-empty">
+          {/* 空名片墙：镜像真实卡片的结构（8px 圆角、50px 圆头像位），虚线=待填空位 */}
+          <div class="friends-wall" aria-hidden="true">
+            {ghostSlots.map(() => (
+              <div class="ghost-slot">
+                <span class="ghost-avatar" />
+                <span class="ghost-lines">
+                  <span class="ghost-line ghost-line--name" />
+                  <span class="ghost-line ghost-line--bio" />
+                </span>
+              </div>
+            ))}
+          </div>
+          <p class="friends-lead">这面墙还空着。如果你也写博客，欢迎把站点挂上来。</p>
+        </div>
+      )
+    }
+
+    <div class="friends-actions">
+      <button
+        type="button"
+        class="friends-cta"
+        data-apply-open
+        aria-haspopup="dialog"
+        aria-controls="friend-apply-dialog"
+      >
+        申请友链
+      </button>
+      <p class="friends-note">填写后会生成一条 GitHub issue，待作者审核确认后会显示在这里。</p>
+    </div>
+
+    {/* 申请表单：默认收在弹窗里，点上面的 CTA 打开；×、Esc、点背板均可关闭 */}
+    <dialog
+      class="apply-dialog"
+      id="friend-apply-dialog"
+      data-apply-dialog
+      aria-label="申请友链"
+      data-pagefind-ignore
+    >
+      <div class="apply-dialog__bar">
+        <button
+          type="button"
+          class="apply-dialog__close"
+          data-apply-close
+          aria-label="关闭申请表单"
+        >
+          <X size={18} strokeWidth={1.8} aria-hidden="true" />
+        </button>
+      </div>
+      <div class="apply-dialog__body">
+        <FriendLinkApplication repository="qfx2007/my-blog" />
+      </div>
+    </dialog>
+  </main>
+</BaseLayout>
+
+<script>
+  // 申请弹窗：CTA 打开，×/Esc/点背板关闭；打开期间锁住背景滚动，关闭后焦点回 CTA
+  const setup = () => {
+    const dialog = document.querySelector<HTMLDialogElement>('[data-apply-dialog]');
+    if (!dialog || dialog.dataset.wired) return;
+    dialog.dataset.wired = 'true';
+
+    document.querySelectorAll<HTMLButtonElement>('[data-apply-open]').forEach((button) =>
+      button.addEventListener('click', () => {
+        dialog.showModal();
+        document.documentElement.classList.add('is-apply-dialog-open');
+      }),
+    );
+
+    dialog.querySelector('[data-apply-close]')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('close', () => {
+      document.documentElement.classList.remove('is-apply-dialog-open');
+    });
+  };
+
+  setup();
+  document.addEventListener('astro:page-load', setup);
+</script>
+
+<style>
+  /* 容器：与博客列表页一致的版心和顶部留白，避开固定顶栏 */
+  .friends-shell {
+    width: min(100%, var(--layout-shell-width));
+    max-width: none;
+    margin: 0 auto;
+    padding: 118px var(--layout-page-gutter) var(--layout-page-bottom);
+  }
+
+  @media (max-width: 720px) {
+    .friends-shell {
+      padding-top: 88px;
+    }
+  }
+
+  /* 有友链时卡片墙的最大宽度，与下方行动区同一居中轴 */
+  .friends-wall-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  /* 空态：墙 + 邀请句一列居中，是本页唯一的视觉主体 */
+  .friends-empty {
+    display: grid;
+    justify-items: center;
+    gap: 22px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  /* 名片墙：列数自适应，结构镜像 FriendLinkCard（真实卡片也是 4 列起步）。
+     下限 138px 是为了让 311px 内宽的窄屏排成 2 列，而不是 4 张全宽卡堆叠 */
+  .friends-wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 138px), 1fr));
+    gap: 12px;
+    width: 100%;
+  }
+
+  /* ghost 占位卡：尺寸对齐真实卡（min-height 90、内距 13、圆角 8），虚线=空位 */
+  .ghost-slot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 90px;
+    padding: 13px;
+    border: 1.5px dashed color-mix(in srgb, var(--paper-accent) 46%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--paper-accent) 5%, transparent);
+  }
+
+  .ghost-avatar {
+    flex: 0 0 50px;
+    width: 50px;
+    height: 50px;
+    border: 1.5px dashed color-mix(in srgb, var(--paper-accent) 46%, transparent);
+    border-radius: 999px;
+  }
+
+  .ghost-lines {
+    display: grid;
+    flex: 1;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .ghost-line {
+    height: 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--paper-accent) 22%, transparent);
+  }
+
+  .ghost-line--name {
+    width: 62%;
+  }
+
+  .ghost-line--bio {
+    width: 42%;
+  }
+
+  .friends-lead {
+    margin: 0;
+    color: var(--paper-ink-soft);
+    font-family: var(--font-ui-label);
+    font-size: 1.02rem;
+    line-height: 1.8;
+    text-align: center;
+    /* 窄屏两行均衡断句，避免「点挂上来。」被孤行 */
+    text-wrap: balance;
+  }
+
+  /* 行动区：整页唯一的实底按钮，其余保持安静 */
+  .friends-actions {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    margin-top: 30px;
+  }
+
+  .friends-cta {
+    min-height: 44px;
+    padding: 9px 24px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--paper-ink);
+    color: var(--paper-surface);
+    font-family: var(--font-ui-label);
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    transition:
+      transform 160ms ease,
+      opacity 160ms ease;
+  }
+
+  .friends-cta:hover {
+    transform: translateY(-1px);
+  }
+
+  .friends-cta:focus-visible {
+    outline: 2px solid var(--paper-accent);
+    outline-offset: 3px;
+  }
+
+  .friends-note {
+    max-width: 42ch;
+    margin: 0;
+    color: var(--paper-ink-faint);
+    font-family: var(--font-meta);
+    font-size: 0.78rem;
+    line-height: 1.8;
+    text-align: center;
+    /* 两行时均衡断句，避免孤行只剩「这里。」 */
+    text-wrap: balance;
+  }
+
+  /* 申请弹窗：纸面面板，顶栏只放关闭键，表单体自行滚动 */
+  .apply-dialog {
+    width: min(760px, calc(100vw - 2rem));
+    max-width: none;
+    max-height: min(86vh, 880px);
+    padding: 0;
+    border: 1px solid var(--paper-line);
+    border-radius: 14px;
+    background: var(--paper-surface);
+    color: var(--paper-ink);
+    overflow: hidden;
+  }
+
+  .apply-dialog[open] {
+    display: flex;
+    flex-direction: column;
+    animation: apply-dialog-in 180ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .apply-dialog::backdrop {
+    /* 固定暗色背板：paper-ink 在深色盘会翻成米白，导致背板被洗亮 */
+    background: color-mix(in srgb, #141614 58%, transparent);
+    animation: apply-backdrop-in 160ms ease;
+  }
+
+  .apply-dialog__bar {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    padding: 10px 12px 0;
+  }
+
+  .apply-dialog__close {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--paper-line);
+    border-radius: 8px;
+    background: var(--paper-control);
+    color: var(--paper-ink-soft);
+    cursor: pointer;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .apply-dialog__close:hover {
+    border-color: var(--paper-line-strong);
+    color: var(--paper-accent);
+  }
+
+  .apply-dialog__close:focus-visible {
+    outline: 2px solid var(--paper-accent);
+    outline-offset: 2px;
+  }
+
+  .apply-dialog__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* 组件自带 28/34 外边距，进了弹窗改成贴合内距 */
+  .apply-dialog :global(.friend-link-application) {
+    margin: 0;
+  }
+
+  /* 打开期间锁住背景页面滚动 */
+  :global(html.is-apply-dialog-open) {
+    overflow: hidden;
+  }
+
+  @keyframes apply-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.985);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes apply-backdrop-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* 尊重减弱动效：去掉弹窗与背板的进场动画 */
+  @media (prefers-reduced-motion: reduce) {
+    .apply-dialog[open],
+    .apply-dialog::backdrop {
+      animation: none;
+    }
+
+    .friends-cta {
+      transition: none;
+    }
+  }
+</style>
