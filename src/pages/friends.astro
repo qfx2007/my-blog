@@ -10,7 +10,7 @@ import { X } from 'lucide-astro';
 import { getSiteConfig } from '../data/site';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const { site } = await getSiteConfig();
+const { site, profile } = await getSiteConfig();
 
 interface FriendItem {
   name: string;
@@ -24,7 +24,17 @@ interface FriendItem {
 }
 
 // 目前 0 条；有申请通过后在这里追加即可（形如 { name: 'XX', url: 'https://...' }）
-const friends: FriendItem[] = [];
+const friends: FriendItem[] = [
+  {
+    name: "ELowen's Space",
+    url: 'http://101.133.232.20/',
+    bio: '个人博客',
+    avatar: 'https://u2.fukit.cn/mufy/7jc6KitvK',
+    backgroundImage: 'https://u2.fukit.cn/mufy/7jc6KitvK',
+    rss: '',
+    sticky: false,
+  },
+];
 
 // 空态墙的占位卡数量：与 FriendLinkCard 桌面 4 列对齐
 const ghostSlots = [0, 1, 2, 3];
@@ -56,23 +66,64 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
               </div>
             ))}
           </div>
-          <p class="friends-lead">这面墙还空着。如果你也写博客，欢迎把站点挂上来。</p>
         </div>
       )
     }
 
-    <div class="friends-actions">
-      <button
-        type="button"
-        class="friends-cta"
-        data-apply-open
-        aria-haspopup="dialog"
-        aria-controls="friend-apply-dialog"
-      >
-        申请友链
-      </button>
-      <p class="friends-note">填写后会生成一条 GitHub issue，待作者审核确认后会显示在这里。</p>
-    </div>
+    <p class="friends-lead">
+      这面墙还空荡荡的。<br class="friends-lead__break" />如果你也写博客，欢迎把<span
+        class="friends-lead__keep">站点</span
+      >挂上来。
+    </p>
+
+    <section class="friends-apply" aria-labelledby="friends-apply-title">
+      <div class="friends-apply__intro">
+        <p class="friends-apply__kicker">Application</p>
+        <h2 class="friends-apply__title" id="friends-apply-title">一起做朋友吧</h2>
+        <ul class="friends-apply__rules">
+          <li>
+            站点可正常访问，内容健康，无违法违规内容；无过多广告、恶意软件或恶意脚本；转载文章请注明出处。
+          </li>
+          <li>建议使用 HTTPS</li>
+          <li>暂不接受纯导航站、采集站、镜像站。</li>
+          <li>请先在贵站友链页添加本站，再提交申请。</li>
+          <li>提供站点名称与可公开访问的链接；简介、头像、RSS 为可选项。</li>
+          <li>审核结果会在 GitHub issue 中回复，通过后会手动收录、未通过会说明原因。</li>
+          <li>若长期无法访问的站点会移除，恢复后可再次申请。</li>
+        </ul>
+      </div>
+
+      <aside class="friends-apply__aside">
+        <p class="friends-apply__aside-label">本站信息</p>
+        <dl class="friends-apply__facts">
+          <div class="friends-apply__fact">
+            <dt>名称</dt>
+            <dd>{site.title}</dd>
+          </div>
+          <div class="friends-apply__fact">
+            <dt>链接</dt>
+            <dd><a href={site.url}>{site.url}</a></dd>
+          </div>
+          <div class="friends-apply__fact">
+            <dt>简介</dt>
+            <dd>一个探索AI全栈方向过程中的开发学习自留地, 写下作品, 留存思考</dd>
+          </div>
+          <div class="friends-apply__fact">
+            <dt>头像</dt>
+            <dd><a href={profile.avatar} download="avatar.png">下载头像</a></dd>
+          </div>
+        </dl>
+        <button
+          type="button"
+          class="friends-cta"
+          data-apply-open
+          aria-haspopup="dialog"
+          aria-controls="friend-apply-dialog"
+        >
+          申请友链
+        </button>
+      </aside>
+    </section>
 
     {/* 申请表单：默认收在弹窗里，点上面的 CTA 打开；×、Esc、点背板均可关闭 */}
     <dialog
@@ -206,31 +257,159 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
     width: 42%;
   }
 
+  /* 卡片墙下方的一句邀请，与墙同轴左对齐 */
   .friends-lead {
-    margin: 0;
+    max-width: 760px;
+    margin: 26px auto 0;
     color: var(--paper-ink-soft);
     font-family: var(--font-ui-label);
-    font-size: 1.02rem;
+    font-size: 0.95rem;
     line-height: 1.8;
-    text-align: center;
-    /* 窄屏两行均衡断句，避免「点挂上来。」被孤行 */
-    text-wrap: balance;
   }
 
-  /* 行动区：整页唯一的实底按钮，其余保持安静 */
-  .friends-actions {
+  /* 窄屏把两句分开，避免「站点」被拆到两行 */
+  .friends-lead__break {
+    display: none;
+  }
+
+  .friends-lead__keep {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 560px) {
+    .friends-lead__break {
+      display: inline;
+    }
+  }
+
+  /* 申请区：一条上分隔线切成左右两栏，左边读规则，右边取本站信息并提交 */
+  .friends-apply {
     display: grid;
-    justify-items: center;
-    gap: 12px;
-    margin-top: 30px;
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+    gap: 44px;
+    max-width: 760px;
+    margin: 40px auto 0;
+    padding-top: 30px;
+    border-top: 1px solid var(--paper-line-strong);
   }
 
+  .friends-apply__intro {
+    min-width: 0;
+  }
+
+  .friends-apply__kicker {
+    margin: 0;
+    color: var(--accent-dark);
+    font-family: var(--font-ui-label);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .friends-apply__title {
+    margin: 10px 0 0;
+    color: var(--paper-ink);
+    font-family: var(--font-heading);
+    font-size: clamp(1.85rem, 3.4vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.14;
+    letter-spacing: -0.01em;
+  }
+
+  .friends-apply__rules {
+    display: grid;
+    gap: 9px;
+    margin: 20px 0 0;
+    padding: 0;
+    color: var(--paper-ink-soft);
+    font-family: var(--font-ui-label);
+    font-size: 0.86rem;
+    line-height: 1.78;
+    list-style: none;
+  }
+
+  .friends-apply__rules li {
+    position: relative;
+    padding-left: 16px;
+  }
+
+  .friends-apply__rules li::before {
+    position: absolute;
+    top: 0.76em;
+    left: 0;
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--paper-accent) 62%, transparent);
+    content: '';
+  }
+
+  /* 右栏不另做卡片，用一条竖线与规则分开 */
+  .friends-apply__aside {
+    min-width: 0;
+    padding-left: 32px;
+    border-left: 1px solid var(--paper-line);
+  }
+
+  .friends-apply__aside-label {
+    margin: 0;
+    color: var(--paper-ink-soft);
+    font-family: var(--font-meta);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .friends-apply__facts {
+    margin: 12px 0 0;
+  }
+
+  .friends-apply__fact {
+    display: grid;
+    grid-template-columns: 3.2em minmax(0, 1fr);
+    gap: 10px;
+    padding: 9px 0;
+    border-top: 1px solid var(--paper-line);
+    font-family: var(--font-ui-label);
+    font-size: 0.82rem;
+    line-height: 1.65;
+  }
+
+  .friends-apply__fact:last-child {
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .friends-apply__fact dt {
+    color: var(--paper-ink-soft);
+  }
+
+  .friends-apply__fact dd {
+    margin: 0;
+    color: var(--paper-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .friends-apply__fact a {
+    color: var(--paper-ink);
+    text-decoration-color: color-mix(in srgb, var(--paper-accent) 55%, transparent);
+    text-underline-offset: 3px;
+    transition: color 160ms ease;
+  }
+
+  .friends-apply__fact a:hover {
+    color: var(--paper-accent);
+  }
+
+  /* 整页唯一的实底按钮 */
   .friends-cta {
+    width: 100%;
     min-height: 44px;
+    margin-top: 20px;
     padding: 9px 24px;
-    border: 1px solid transparent;
+    border: 1px solid var(--accent-dark);
     border-radius: 8px;
-    background: var(--paper-ink);
+    background: var(--accent-dark);
     color: var(--paper-surface);
     font-family: var(--font-ui-label);
     font-size: 0.9rem;
@@ -239,11 +418,13 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
     cursor: pointer;
     transition:
       transform 160ms ease,
+      box-shadow 160ms ease,
       opacity 160ms ease;
   }
 
   .friends-cta:hover {
     transform: translateY(-1px);
+    box-shadow: var(--paper-shadow-lift);
   }
 
   .friends-cta:focus-visible {
@@ -251,16 +432,19 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
     outline-offset: 3px;
   }
 
-  .friends-note {
-    max-width: 42ch;
-    margin: 0;
-    color: var(--paper-ink-faint);
-    font-family: var(--font-meta);
-    font-size: 0.78rem;
-    line-height: 1.8;
-    text-align: center;
-    /* 两行时均衡断句，避免孤行只剩「这里。」 */
-    text-wrap: balance;
+  @media (max-width: 760px) {
+    .friends-apply {
+      grid-template-columns: 1fr;
+      gap: 28px;
+      margin-top: 34px;
+      padding-top: 26px;
+    }
+
+    .friends-apply__aside {
+      padding: 24px 0 0;
+      border-top: 1px solid var(--paper-line);
+      border-left: 0;
+    }
   }
 
   /* 申请弹窗：纸面面板，顶栏只放关闭键，表单体自行滚动 */
