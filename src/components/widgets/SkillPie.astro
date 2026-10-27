@@ -22,9 +22,17 @@ const ariaSummary =
   `职业技能分布饼图，共 ${items.length} 项：` +
   `熟练 ${count(3)} 项、熟悉 ${count(2)} 项、了解 ${count(1)} 项。`;
 
-const size = 320;
-const center = size / 2;
-const radius = center - 20;
+const size = 540;
+const height = 340;
+const centerX = size / 2;
+const centerY = height / 2;
+const radius = 122;
+const labelLineLength = 15;
+const labelLineLength2 = 30;
+const labelDistance = 5;
+const labelMinY = 12;
+const labelMaxY = height - 12;
+const labelGapMax = 14;
 const total = items.reduce((sum, item) => sum + item.value, 0) || 1;
 
 const fillPercent = (value: number) => (value >= 3 ? 92 : value === 2 ? 72 : 52);
@@ -35,32 +43,108 @@ const sliceStyle = (index: number, value: number) => {
   return `--slice-fill: color-mix(in oklab, var(--paper-accent) ${fill}%, var(--paper-surface));`;
 };
 
+type Slice = {
+  name: string;
+  value: number;
+  percent: number;
+  path: string;
+  style: string;
+  labelSide: 'left' | 'right';
+  labelX: number;
+  labelY: number;
+  edgeX: number;
+  edgeY: number;
+  elbowX: number;
+  lineEndX: number;
+};
+
 let currentAngle = -Math.PI / 2;
-const slices = items.map((item, index) => {
+const slices: Slice[] = items.map((item, index) => {
   const startAngle = currentAngle;
   const sweep = (item.value / total) * Math.PI * 2;
   const endAngle = startAngle + sweep;
   currentAngle = endAngle;
 
-  const x1 = center + radius * Math.cos(startAngle);
-  const y1 = center + radius * Math.sin(startAngle);
-  const x2 = center + radius * Math.cos(endAngle);
-  const y2 = center + radius * Math.sin(endAngle);
+  const x1 = centerX + radius * Math.cos(startAngle);
+  const y1 = centerY + radius * Math.sin(startAngle);
+  const x2 = centerX + radius * Math.cos(endAngle);
+  const y2 = centerY + radius * Math.sin(endAngle);
   const largeArc = sweep > Math.PI ? 1 : 0;
 
   const middleAngle = startAngle + sweep / 2;
   const offsetX = Math.cos(middleAngle) * 14;
   const offsetY = Math.sin(middleAngle) * 14;
+  const nx = Math.cos(middleAngle);
+  const ny = Math.sin(middleAngle);
+  const dir = nx >= 0 ? 1 : -1;
+  const edgeX = centerX + radius * nx;
+  const edgeY = centerY + radius * ny;
+  const elbowX = edgeX + nx * labelLineLength;
+  const elbowY = edgeY + ny * labelLineLength;
+  const lineEndX = elbowX + dir * labelLineLength2;
+  const labelX = lineEndX + dir * labelDistance;
 
   return {
     ...item,
     percent: Math.round((item.value / total) * 100),
-    path: `M ${center} ${center} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${radius} ${radius} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`,
+    path: `M ${centerX} ${centerY} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${radius} ${radius} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`,
     style:
       `${sliceStyle(index, item.value)} ` +
       `--slice-tx: ${offsetX.toFixed(2)}px; --slice-ty: ${offsetY.toFixed(2)}px;`,
+    labelSide: dir > 0 ? 'right' : 'left',
+    labelX,
+    labelY: elbowY,
+    edgeX,
+    edgeY,
+    elbowX,
+    lineEndX,
   };
 });
+
+for (const side of ['left', 'right'] as const) {
+  const group = slices
+    .filter((slice) => slice.labelSide === side)
+    .sort((a, b) => a.labelY - b.labelY);
+
+  if (group.length === 0) continue;
+
+  const gap = Math.min(labelGapMax, (labelMaxY - labelMinY) / Math.max(1, group.length - 1));
+  let previousY = labelMinY - gap;
+  for (const slice of group) {
+    slice.labelY = Math.max(slice.labelY, previousY + gap);
+    previousY = slice.labelY;
+  }
+
+  let nextY = labelMaxY + gap;
+  for (let index = group.length - 1; index >= 0; index--) {
+    const slice = group[index];
+    slice.labelY = Math.min(slice.labelY, nextY - gap);
+    nextY = slice.labelY;
+  }
+
+  const dir = side === 'right' ? 1 : -1;
+  const radialEnd = radius + labelLineLength;
+  let ellipseRadiusY = radialEnd;
+  let maxDy = -1;
+  for (const slice of group) {
+    const dy = Math.abs(slice.labelY - centerY);
+    if (dy >= maxDy) {
+      const dx = slice.labelX - centerX - labelLineLength2 * dir;
+      const ratio = Math.abs(dx) < radialEnd ? 1 - (dx * dx) / (radialEnd * radialEnd) : 0;
+      ellipseRadiusY = ratio > 0 ? Math.sqrt((dy * dy) / ratio) : radialEnd;
+      maxDy = dy;
+    }
+  }
+
+  for (const slice of group) {
+    const dy = Math.abs(slice.labelY - centerY);
+    const ratio = Math.max(0, 1 - (dy * dy) / (ellipseRadiusY * ellipseRadiusY));
+    const dx = Math.sqrt(ratio * radialEnd * radialEnd);
+    slice.labelX = centerX + (dx + labelLineLength2) * dir;
+    slice.lineEndX = slice.labelX - dir * labelDistance;
+    slice.elbowX = slice.lineEndX - dir * labelLineLength2;
+  }
+}
 ---
 
 <div class="skill-pie" data-skill-pie>
@@ -87,18 +171,41 @@ const slices = items.map((item, index) => {
     }
   </div>
   <div class="skill-pie__chart">
-    <svg class="skill-pie__svg" viewBox={`0 0 ${size} ${size}`} role="img" aria-label={ariaSummary}>
+    <svg
+      class="skill-pie__svg"
+      viewBox={`0 0 ${size} ${height}`}
+      role="img"
+      aria-label={ariaSummary}
+    >
       {
         slices.map((slice) => (
-          <path
-            class="skill-pie__slice"
-            d={slice.path}
+          <g
+            class="skill-pie__slice-group"
             style={slice.style}
+            data-slice-group
             data-name={slice.name}
-            data-slice
           >
-            <title>{`${slice.name} · ${levelName(slice.value)}${levelMark(slice.value)} · ${slice.percent}%`}</title>
-          </path>
+            <path class="skill-pie__slice" d={slice.path} data-name={slice.name} data-slice>
+              <title>{`${slice.name} · ${levelName(slice.value)}${levelMark(slice.value)} · ${slice.percent}%`}</title>
+            </path>
+            <path
+              class="skill-pie__label-line"
+              d={`M ${slice.edgeX.toFixed(2)} ${slice.edgeY.toFixed(2)} L ${slice.elbowX.toFixed(2)} ${slice.labelY.toFixed(2)} L ${slice.lineEndX.toFixed(2)} ${slice.labelY.toFixed(2)}`}
+              aria-hidden="true"
+            />
+            <text
+              class="skill-pie__label"
+              x={slice.labelX}
+              y={slice.labelY}
+              text-anchor={slice.labelSide === 'right' ? 'start' : 'end'}
+              dominant-baseline="middle"
+              aria-hidden="true"
+              data-label
+              data-name={slice.name}
+            >
+              {slice.name}
+            </text>
+          </g>
         ))
       }
     </svg>
@@ -112,9 +219,10 @@ const slices = items.map((item, index) => {
       host.dataset.wired = 'true';
 
       const slices = Array.from(host.querySelectorAll<SVGPathElement>('[data-slice]'));
+      const groups = Array.from(host.querySelectorAll<SVGGElement>('[data-slice-group]'));
       const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('[data-legend]'));
       const selected = new Set<string>();
-      const sliceByName = new Map(slices.map((slice) => [slice.dataset.name ?? '', slice]));
+      const groupByName = new Map(groups.map((group) => [group.dataset.name ?? '', group]));
       const buttonByName = new Map(buttons.map((button) => [button.dataset.name ?? '', button]));
 
       const sync = () => {
@@ -123,13 +231,13 @@ const slices = items.map((item, index) => {
           button.setAttribute('aria-pressed', String(active));
           button.classList.toggle('is-active', active);
         });
-        slices.forEach((slice) => {
-          slice.classList.toggle('is-selected', selected.has(slice.dataset.name ?? ''));
+        groups.forEach((group) => {
+          group.classList.toggle('is-selected', selected.has(group.dataset.name ?? ''));
         });
       };
 
       const setHover = (name: string, active: boolean) => {
-        sliceByName.get(name)?.classList.toggle('is-hover', active);
+        groupByName.get(name)?.classList.toggle('is-hover', active);
         buttonByName.get(name)?.classList.toggle('is-hover', active);
       };
 
@@ -305,24 +413,59 @@ const slices = items.map((item, index) => {
     overflow: visible;
   }
 
+  .skill-pie__slice-group {
+    transition: transform 160ms ease;
+  }
+
+  .skill-pie__slice-group.is-selected {
+    transform: translate(var(--slice-tx, 0), var(--slice-ty, 0));
+  }
+
   .skill-pie__slice {
     fill: var(--slice-fill, var(--paper-accent));
     stroke: var(--paper-surface);
     stroke-width: 1.5;
     stroke-linejoin: round;
     cursor: pointer;
-    transition:
-      transform 160ms ease,
-      filter 160ms ease;
+    transition: filter 160ms ease;
   }
 
   .skill-pie__slice:hover,
-  .skill-pie__slice.is-hover {
+  .skill-pie__slice-group.is-hover .skill-pie__slice {
     filter: brightness(1.06);
   }
 
-  .skill-pie__slice.is-selected {
-    transform: translate(var(--slice-tx, 0), var(--slice-ty, 0));
+  .skill-pie__label-line {
+    fill: none;
+    stroke: color-mix(in oklab, var(--slice-fill) 55%, var(--paper-ink-faint));
+    stroke-width: 1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+    transition: stroke 160ms ease;
+  }
+
+  .skill-pie__label {
+    fill: color-mix(in oklab, var(--slice-fill) 65%, var(--paper-ink));
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.01em;
+    paint-order: stroke;
+    stroke: var(--paper-surface);
+    stroke-width: 2.4px;
+    stroke-linejoin: round;
+    pointer-events: none;
+    transition: fill 160ms ease;
+  }
+
+  .skill-pie__slice-group.is-hover .skill-pie__label,
+  .skill-pie__slice-group.is-selected .skill-pie__label {
+    fill: var(--paper-ink);
+  }
+
+  .skill-pie__slice-group.is-hover .skill-pie__label-line,
+  .skill-pie__slice-group.is-selected .skill-pie__label-line {
+    stroke: var(--paper-accent);
   }
 
   @media (max-width: 640px) {
@@ -348,7 +491,10 @@ const slices = items.map((item, index) => {
 
   @media (prefers-reduced-motion: reduce) {
     .skill-pie__legend-item,
-    .skill-pie__slice {
+    .skill-pie__slice,
+    .skill-pie__slice-group,
+    .skill-pie__label,
+    .skill-pie__label-line {
       transition: none;
     }
   }
