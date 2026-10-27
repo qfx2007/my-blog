@@ -25,12 +25,9 @@ const { home, profile, site } = await getSiteConfig();
 
     <Fragment slot="latest">
       <BlogHeatmap
-        weeks={home.latest.heatmapWeeks}
         showLatest={home.latest.showHeatmapLatest}
         latestCount={home.latest.count}
         excludeDraft={home.latest.excludeDraft}
-        startDate={home.latest.startDate || null}
-        dateArchiveBaseHref={home.latest.dateArchiveBaseHref || undefined}
         totalPostsBase={home.latest.totalPostsBase}
         activeDaysBase={home.latest.activeDaysBase}
         dayStreakBase={home.latest.dayStreakBase}

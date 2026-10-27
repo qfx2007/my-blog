@@ -179,13 +179,10 @@ body = [
 
 [config.home.latest]
 count = 1
-heatmapWeeks = 24
 showHeatmapLatest = true
 excludeDraft = true
-startDate = ""
-dateArchiveBaseHref = ""
 # 以下三个基数只影响首页统计数字的显示值（显示 = 基数 + 实时计算），
-# 不影响下方热力图格子；改为 0 即恢复纯真实值。
+# 改为 0 即恢复纯真实值。
 totalPostsBase = 0
 activeDaysBase = 30
 dayStreakBase = 12
@@ -193,14 +190,14 @@ dayStreakBase = 12
 # 右侧导航栏部分
 [[config.home.navigation]]
 icon = "pen"
-title = "Writings archive"
-subtitle = "文稿归档"
+title = "文稿归档"
+subtitle = "Writings archive"
 href = "/blog"
 
 [[config.home.navigation]]
 icon = "briefcase"
-title = "Portfolio shelf"
-subtitle = "作品集展台"
+title = "作品集展台"
+subtitle = "Portfolio shelf"
 href = "/projects"
 
 

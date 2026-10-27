@@ -34,6 +34,15 @@ const friends: FriendItem[] = [
     rss: '',
     sticky: false,
   },
+  {
+    name: ' 葉は静かに落ちる',
+    url: 'http://101.133.232.20/',
+    bio: '有朋自远方来, 不亦说乎',
+    avatar: 'https://api.sin6626.me/api/v2/objects/avatar/Sin.jpg',
+    backgroundImage: '',
+    rss: '',
+    sticky: false,
+  },
 ];
 
 // 空态墙的占位卡数量：与 FriendLinkCard 桌面 4 列对齐
@@ -71,9 +80,9 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
     }
 
     <p class="friends-lead">
-      这面墙还空荡荡的。<br class="friends-lead__break" />如果你也写博客，欢迎把<span
-        class="friends-lead__keep">站点</span
-      >挂上来。
+      这面墙还空荡荡的。<br class="friends-lead__break" />如果你也写博客，欢迎<span
+        class="friends-lead__keep">交换</span
+      >友链
     </p>
 
     <section class="friends-apply" aria-labelledby="friends-apply-title">
@@ -82,7 +91,7 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
         <h2 class="friends-apply__title" id="friends-apply-title">一起做朋友吧</h2>
         <ul class="friends-apply__rules">
           <li>
-            站点可正常访问，内容健康，无违法违规内容；无过多广告、恶意软件或恶意脚本；转载文章请注明出处。
+            站点可正常访问，保持更新、有原创内容；内容健康、无违法违规内容、无过多广告、恶意软件或恶意脚本；转载文章请注明出处。
           </li>
           <li>建议使用 HTTPS</li>
           <li>暂不接受纯导航站、采集站、镜像站。</li>
@@ -110,7 +119,7 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
           </div>
           <div class="friends-apply__fact">
             <dt>头像</dt>
-            <dd><a href={profile.avatar} download="avatar.png">下载头像</a></dd>
+            <dd><a href={profile.avatar} target="_blank" rel="noopener noreferrer">下载头像</a></dd>
           </div>
         </dl>
         <button

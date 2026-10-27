@@ -424,11 +424,8 @@ const siteConfig = defineCollection({
       latest: z
         .object({
           count: z.number().int().positive().default(1),
-          heatmapWeeks: z.number().int().positive().default(24),
           showHeatmapLatest: z.boolean().optional().default(true),
           excludeDraft: z.boolean().optional().default(true),
-          startDate: z.string().optional().default(''),
-          dateArchiveBaseHref: z.string().optional().default(''),
           totalPostsBase: z.number().int().min(0).optional().default(0),
           activeDaysBase: z.number().int().min(0).optional().default(0),
           dayStreakBase: z.number().int().min(0).optional().default(0),
@@ -436,11 +433,8 @@ const siteConfig = defineCollection({
         .optional()
         .default({
           count: 1,
-          heatmapWeeks: 24,
           showHeatmapLatest: true,
           excludeDraft: true,
-          startDate: '',
-          dateArchiveBaseHref: '',
           totalPostsBase: 0,
           activeDaysBase: 0,
           dayStreakBase: 0,

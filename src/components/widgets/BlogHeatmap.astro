@@ -2,64 +2,34 @@
 import { getCollection } from 'astro:content';
 import Icon from '../Icon.astro';
 import { getSiteConfig } from '../../data/site';
-import { createRecentBlogHeatmap, type HeatmapDay } from '../../utils/blog-heatmap';
+import { createRecentBlogHeatmap } from '../../utils/blog-heatmap';
 import { getUiText } from '../../utils/ui-text';
 
 interface Props {
-  weeks?: number;
   showLatest?: boolean;
   latestCount?: number;
   excludeDraft?: boolean;
-  dateArchiveBaseHref?: string;
-  startDate?: Date | string | null;
   totalPostsBase?: number;
   activeDaysBase?: number;
   dayStreakBase?: number;
 }
 
 const {
-  weeks = 24,
   showLatest = true,
   latestCount = 1,
   excludeDraft = true,
-  dateArchiveBaseHref,
-  startDate,
   totalPostsBase = 0,
   activeDaysBase = 0,
   dayStreakBase = 0,
 } = Astro.props;
 const posts = await getCollection('blog', ({ data }) => !excludeDraft || !data.draft);
-const heatmap = createRecentBlogHeatmap(posts, weeks, latestCount, startDate);
+const heatmap = createRecentBlogHeatmap(posts, latestCount);
 const ui = getUiText(await getSiteConfig());
-const heatmapLabel = startDate
-  ? ui.heatmap.writingSince(heatmap.startDate)
-  : ui.heatmap.recentWeeks(heatmap.weeks);
 const formatDate = new Intl.DateTimeFormat(ui.locale, {
   month: 'short',
   day: 'numeric',
   year: 'numeric',
 });
-
-function getPostLabel(count: number) {
-  return ui.heatmap.postCount(count);
-}
-
-function getDayTitle(day: HeatmapDay) {
-  if (day.isFuture) return `${day.date}: ${ui.heatmap.upcoming}`;
-
-  const titleLines = day.posts.slice(0, 5).map((post) => `- ${post.title}`);
-  const overflowLine = day.posts.length > 5 ? ['...'] : [];
-
-  return [`${day.date}: ${getPostLabel(day.count)}`, ...titleLines, ...overflowLine].join('\n');
-}
-
-function getDayHref(day: HeatmapDay) {
-  if (dateArchiveBaseHref && day.count > 0) {
-    return `${dateArchiveBaseHref.replace(/\/$/, '')}/${day.date}/`;
-  }
-
-  return day.posts[0]?.href;
-}
 ---
 
 <article class="glass-card heatmap-card">
@@ -100,47 +70,6 @@ function getDayHref(day: HeatmapDay) {
       </aside>
     )
   }
-
-  <div class="rhythm-grid" aria-label={heatmapLabel}>
-    <div class="weekday-column" aria-hidden="true">
-      {ui.heatmap.weekdays.map((weekday) => <span>{weekday}</span>)}
-    </div>
-
-    <div class="heatmap-cells" style={`--week-count: ${heatmap.weeks};`}>
-      {
-        heatmap.days.map((day) => {
-          if (day.isFuture) {
-            return <span class="heatmap-cell future-cell" aria-hidden="true" />;
-          }
-
-          const href = getDayHref(day);
-          const content = (
-            <span
-              class={`heatmap-cell level-${day.level}`}
-              title={getDayTitle(day)}
-              aria-hidden="true"
-            />
-          );
-
-          return href ? (
-            <a class="cell-link" href={href} aria-label={getDayTitle(day)}>
-              {content}
-            </a>
-          ) : (
-            <span class="cell-link static-cell" aria-label={getDayTitle(day)}>
-              {content}
-            </span>
-          );
-        })
-      }
-    </div>
-  </div>
-
-  <footer>
-    <span>{ui.heatmap.less}</span>
-    {[0, 1, 2, 3, 4].map((level) => <i class={`heatmap-cell level-${level}`} />)}
-    <span>{ui.heatmap.more}</span>
-  </footer>
 </article>
 
 <style>
@@ -259,140 +188,11 @@ function getDayHref(day: HeatmapDay) {
     outline-offset: 3px;
   }
 
-  .rhythm-grid {
-    --cell-size: 8px;
-    --cell-gap: 2.5px;
-    display: grid;
-    grid-template-columns: 24px minmax(0, 1fr);
-    gap: 8px;
-    align-items: center;
-    width: 100%;
-    max-width: 100%;
-    overflow: visible;
-  }
-
-  .weekday-column {
-    display: grid;
-    grid-template-rows: repeat(3, var(--cell-size));
-    gap: calc(var(--cell-size) + var(--cell-gap));
-    color: var(--paper-ink-faint);
-    font-size: 0.62rem;
-    line-height: 1;
-  }
-
-  .heatmap-cells {
-    display: grid;
-    grid-auto-flow: column;
-    grid-template-rows: repeat(7, var(--cell-size));
-    grid-auto-columns: var(--cell-size);
-    gap: var(--cell-gap);
-    width: calc(
-      (var(--cell-size) * var(--week-count)) + (var(--cell-gap) * (var(--week-count) - 1))
-    );
-    max-width: 100%;
-  }
-
-  .heatmap-cell,
-  .cell-link {
-    display: block;
-    width: var(--cell-size);
-    height: var(--cell-size);
-    min-width: 8px;
-    min-height: 8px;
-  }
-
-  .cell-link {
-    position: relative;
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .cell-link:hover .heatmap-cell {
-    outline: 1px solid var(--paper-line-strong);
-    outline-offset: 1px;
-  }
-
-  .heatmap-cell {
-    border-radius: 2.5px;
-    background: rgba(102, 125, 109, 0.12);
-    box-shadow: inset 0 0 0 1px var(--paper-line);
-  }
-
-  .future-cell {
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .level-0 {
-    background: rgba(102, 125, 109, 0.16);
-  }
-
-  .level-1 {
-    background: #dce8dc;
-  }
-
-  .level-2 {
-    background: #b9cbb9;
-  }
-
-  .level-3 {
-    background: #8fa58f;
-  }
-
-  .level-4 {
-    background: #667d6d;
-  }
-
-  footer {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--paper-ink-faint);
-    font-size: 0.72rem;
-  }
-
-  footer .heatmap-cell {
-    --cell-size: 9px;
-  }
-
-  @media (max-width: 1180px) and (min-width: 821px) {
-    .rhythm-grid {
-      --cell-size: 8px;
-    }
-  }
-
   @media (max-width: 820px) {
     .heatmap-card {
       gap: 14px;
       padding: 0;
       overflow: hidden;
-    }
-
-    .rhythm-grid {
-      --cell-gap: 2.5px;
-      grid-template-columns: 22px minmax(0, 1fr);
-      overflow: hidden;
-      width: 100%;
-    }
-
-    .heatmap-cells {
-      grid-template-rows: repeat(7, auto);
-      grid-auto-columns: minmax(0, 1fr);
-      width: 100%;
-      max-width: 360px;
-    }
-
-    .heatmap-cells .heatmap-cell,
-    .heatmap-cells .cell-link {
-      width: 100%;
-      height: auto;
-      min-width: 0;
-      min-height: 0;
-      aspect-ratio: 1;
-    }
-
-    .weekday-column {
-      font-size: 0.58rem;
     }
   }
 </style>

@@ -1,23 +1,7 @@
 import type { CollectionEntry } from 'astro:content';
 import { sortByDateDesc } from './content-dates';
 
-export interface HeatmapPost {
-  title: string;
-  href: string;
-}
-
-export interface HeatmapDay {
-  date: string;
-  count: number;
-  level: 0 | 1 | 2 | 3 | 4;
-  posts: HeatmapPost[];
-  isFuture?: boolean;
-}
-
 export interface HeatmapWindow {
-  days: HeatmapDay[];
-  weeks: number;
-  startDate: string;
   totalPosts: number;
   activeDays: number;
   currentStreak: number;
@@ -31,10 +15,6 @@ export interface LatestPost {
 }
 
 type BlogPost = CollectionEntry<'blog'>;
-type HeatmapStartDate = Date | string | null | undefined;
-
-const DAYS_IN_WEEK = 7;
-const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 export function getDateKey(date: Date): string {
   const year = date.getFullYear();
@@ -42,14 +22,6 @@ export function getDateKey(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
-}
-
-export function getLevel(count: number): 0 | 1 | 2 | 3 | 4 {
-  if (count === 0) return 0;
-  if (count === 1) return 1;
-  if (count === 2) return 2;
-  if (count === 3) return 3;
-  return 4;
 }
 
 export function getLatestPosts(posts: BlogPost[], count = 1): LatestPost[] {
@@ -62,99 +34,33 @@ export function getLatestPosts(posts: BlogPost[], count = 1): LatestPost[] {
     }));
 }
 
-function getStartOfWeek(date: Date) {
-  const start = new Date(date);
-  const dayOffset = (start.getDay() + 6) % 7;
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() - dayOffset);
-
-  return start;
-}
-
-function getConfiguredStartDate(startDate: HeatmapStartDate) {
-  if (!startDate) return null;
-
-  const date = startDate instanceof Date ? new Date(startDate) : new Date(startDate);
-
-  if (Number.isNaN(date.valueOf())) {
-    return null;
-  }
-
-  date.setHours(0, 0, 0, 0);
-  return date;
-}
-
-function getPostsByDate(posts: BlogPost[]) {
-  const postsByDate = new Map<string, HeatmapPost[]>();
+function getPostCounts(posts: BlogPost[]) {
+  const counts = new Map<string, number>();
 
   for (const post of posts) {
     const key = getDateKey(post.data.date);
-    const existingPosts = postsByDate.get(key) ?? [];
-    existingPosts.push({
-      title: post.data.title,
-      href: `/blog/${post.id}/`,
-    });
-    postsByDate.set(key, existingPosts);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
   }
 
-  return postsByDate;
+  return counts;
 }
 
-export function createRecentBlogHeatmap(
-  posts: BlogPost[],
-  weeks = 12,
-  latestCount = 1,
-  startDate?: HeatmapStartDate,
-): HeatmapWindow {
+export function createRecentBlogHeatmap(posts: BlogPost[], latestCount = 1): HeatmapWindow {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const currentWeekStart = getStartOfWeek(today);
-  const configuredStartDate = getConfiguredStartDate(startDate);
-  const start = configuredStartDate
-    ? getStartOfWeek(configuredStartDate > today ? today : configuredStartDate)
-    : new Date(currentWeekStart);
-  const safeWeeks = configuredStartDate
-    ? Math.max(
-        1,
-        Math.floor((currentWeekStart.valueOf() - start.valueOf()) / (DAYS_IN_WEEK * DAY_IN_MS)) + 1,
-      )
-    : Math.max(1, Math.floor(weeks));
+  const postCounts = getPostCounts(posts);
 
-  if (!configuredStartDate) {
-    start.setDate(start.getDate() - (safeWeeks - 1) * DAYS_IN_WEEK);
-  }
-
-  const postsByDate = getPostsByDate(posts);
-  const days: HeatmapDay[] = [];
-
-  for (let index = 0; index < safeWeeks * DAYS_IN_WEEK; index += 1) {
-    const date = new Date(start);
-    date.setDate(start.getDate() + index);
-    const key = getDateKey(date);
-    const isFuture = date > today;
-    const dayPosts = isFuture ? [] : (postsByDate.get(key) ?? []);
-
-    days.push({
-      date: key,
-      count: dayPosts.length,
-      level: getLevel(dayPosts.length),
-      posts: dayPosts,
-      isFuture,
-    });
-  }
-
+  // 连续天数从今天按天倒数，遇到没有文章的日期即停；未来排期不参与。
   let currentStreak = 0;
-  for (const day of [...days].reverse()) {
-    const date = new Date(day.date);
-    if (date > today) continue;
-    if (day.count === 0) break;
-
+  const cursor = new Date(today);
+  while ((postCounts.get(getDateKey(cursor)) ?? 0) > 0) {
     currentStreak += 1;
+    cursor.setDate(cursor.getDate() - 1);
   }
 
   // 活跃天数按建站以来全部文章的发布日期去重统计（只增不减），
-  // 与窗口无关；排除未来日期的草稿排期。
+  // 排除未来日期的草稿排期。
   const todayKey = getDateKey(today);
   const activeDayKeys = new Set<string>();
 
@@ -169,9 +75,6 @@ export function createRecentBlogHeatmap(
   }
 
   return {
-    days,
-    weeks: safeWeeks,
-    startDate: getDateKey(start),
     totalPosts: posts.length,
     activeDays: activeDayKeys.size,
     currentStreak,

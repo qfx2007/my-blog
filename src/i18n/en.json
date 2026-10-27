@@ -10,17 +10,7 @@
     "dayStreak": "Day streak",
     "latest": "Latest",
     "latestPublishedPosts": "Latest published posts",
-    "openLatestPost": "Open latest post: {title}",
-    "less": "Less",
-    "more": "More",
-    "weekdays": ["Mon", "Wed", "Fri"],
-    "writingSince": "Writing activity since {date}",
-    "recentWeeks": "Recent {weeks} weeks writing activity",
-    "upcoming": "upcoming",
-    "postCount": {
-      "one": "{count} post",
-      "other": "{count} posts"
-    }
+    "openLatestPost": "Open latest post: {title}"
   },
   "groups": {
     "categories": "Categories",

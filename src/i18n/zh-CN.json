@@ -10,14 +10,7 @@
     "dayStreak": "连续天数",
     "latest": "最新",
     "latestPublishedPosts": "最新发布文章",
-    "openLatestPost": "打开最新文章：{title}",
-    "less": "少",
-    "more": "多",
-    "weekdays": ["周一", "周三", "周五"],
-    "writingSince": "自 {date} 起的写作活动",
-    "recentWeeks": "最近 {weeks} 周写作活动",
-    "upcoming": "未来",
-    "postCount": "{count} 篇文章"
+    "openLatestPost": "打开最新文章：{title}"
   },
   "groups": {
     "categories": "分类",
