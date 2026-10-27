@@ -1,7 +1,7 @@
 ---
 title: '关于建站的一则感想'
 description: ''
-date: '2026-9-05'
+date: '2026-8-08'
 draft: false
 tags:
   - '前端'

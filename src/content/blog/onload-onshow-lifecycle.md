@@ -1,7 +1,7 @@
 ---
 title: 'onLoad / onShow 触发时机与页面生命周期差异'
 description: '梳理小程序 onLoad、onShow、onHide、onUnload 的触发规则，结合页面栈与跳转方式、分析 tabBar 页面和普通页面生命周期行为差异，避开重复请求、页面状态残留等问题。'
-date: '2026-9-30'
+date: '2026-10-9'
 draft: false
 tags:
   - 小程序
