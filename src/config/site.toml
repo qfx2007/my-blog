@@ -21,7 +21,8 @@ code = "Monaco"
 # 模板内可直接选择：ChillRoundM、LXGW WenKai
 # 中文阅读字体
 zh = "LXGW WenKai"
-# 中文完整字体文件
+# 中文源字体文件：仅用于构建时生成 UI / 正文子集，不会部署到 public。
+# 源文件放在 src/assets/fonts/，子集输出到 public/fonts/。
 file = "/fonts/LXGWWenKai-Regular.ttf"
 
 [config.code]
@@ -124,7 +125,7 @@ role = "A Prospective Frontend Engineer"
 email = "2171334945@qq.com"
 website = "https://blog.20070228.xyz/"
 github = "https://github.com/qfx2007/my-blog"
-avatar = "/images/avatar.png"
+avatar = "/images/avatar.webp"
 
 [[config.topNav.links]]
 label = "首页"

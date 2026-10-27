@@ -6,7 +6,17 @@ type Props = Omit<HTMLAttributes<'img'>, 'src'> & {
   className?: string;
   src?: string | ImageMetadata;
 };
-const { class: classAttr, className, alt = '', src, width, height, ...imageProps } = Astro.props;
+const {
+  class: classAttr,
+  className,
+  alt = '',
+  src,
+  width,
+  height,
+  loading = 'lazy',
+  decoding = 'async',
+  ...imageProps
+} = Astro.props;
 const image = src && typeof src === 'object' && 'src' in src ? src : undefined;
 const resolvedSrc = typeof src === 'string' ? src : image?.src;
 ---
@@ -21,6 +31,8 @@ const resolvedSrc = typeof src === 'string' ? src : image?.src;
           alt={alt}
           width={width ?? image?.width}
           height={height ?? image?.height}
+          loading={loading}
+          decoding={decoding}
           class={[classAttr, className].filter(Boolean).join(' ')}
         />
         <span aria-hidden="true">

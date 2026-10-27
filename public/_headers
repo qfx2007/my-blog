@@ -1,0 +1,15 @@
+# Cloudflare Workers static assets header rules.
+# Fingerprinted build output can be cached forever; public assets use shorter windows
+# because their filenames are stable and can be replaced between deployments.
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=2592000
+
+/images/*
+  Cache-Control: public, max-age=604800
+
+/videos/*
+  Cache-Control: public, max-age=604800

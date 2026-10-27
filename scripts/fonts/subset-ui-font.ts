@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'smol-toml';
@@ -18,12 +18,16 @@ type FontConfig = {
 
 const projectRoot = process.cwd();
 const uiCharsPath = join(projectRoot, 'scripts/fonts/ui-chars.txt');
+const contentCharsPath = join(projectRoot, 'scripts/fonts/content-chars.txt');
 const friendCirclePath = join(projectRoot, 'public/friend-circle.json');
 const fontConfig = readFontConfig();
-const subsetFontUrl = getSubsetFontUrl(fontConfig.file);
-const outputFontPath = resolveProjectPath(subsetFontUrl);
-const sourceFontPath = resolveProjectPath(fontConfig.file);
-const subsetFontName = `${fontConfig.zh} UI Subset`;
+const uiSubsetFontUrl = getSubsetFontUrl(fontConfig.file, 'ui');
+const contentSubsetFontUrl = getSubsetFontUrl(fontConfig.file, 'content');
+const uiOutputFontPath = resolveProjectPath(uiSubsetFontUrl);
+const contentOutputFontPath = resolveProjectPath(contentSubsetFontUrl);
+const sourceFontPath = resolveSourceFontPath(fontConfig.file);
+const uiSubsetFontName = `${fontConfig.zh} UI Subset`;
+const contentSubsetFontName = `${fontConfig.zh} Content Subset`;
 const isWindows = process.platform === 'win32';
 const venvBinDir = isWindows ? 'Scripts' : 'bin';
 const pythonExe = isWindows ? 'python.exe' : 'python';
@@ -119,14 +123,14 @@ function readFontConfig(): FontConfig {
   };
 }
 
-function getSubsetFontUrl(fontUrl: string) {
+function getSubsetFontUrl(fontUrl: string, variant: 'ui' | 'content') {
   const queryIndex = fontUrl.search(/[?#]/);
   const suffix = queryIndex === -1 ? '' : fontUrl.slice(queryIndex);
   const path = queryIndex === -1 ? fontUrl : fontUrl.slice(0, queryIndex);
   const extensionIndex = path.lastIndexOf('.');
   const basePath = extensionIndex === -1 ? path : path.slice(0, extensionIndex);
 
-  return `${basePath}-ui-subset.woff2${suffix}`;
+  return `${basePath}-${variant}-subset.woff2${suffix}`;
 }
 
 function normalizeConfigString(value: unknown, fallback: string) {
@@ -144,6 +148,27 @@ function resolveProjectPath(value: string) {
   const relativePath = normalized.startsWith('public/') ? normalized : `public/${normalized}`;
 
   return join(projectRoot, relativePath);
+}
+
+function resolveSourceFontPath(value: string) {
+  if (/^https?:\/\//i.test(value)) {
+    throw new Error(
+      `Font subsetting needs a local font file, but config.fonts.file received a remote URL: ${value}`,
+    );
+  }
+
+  const normalized = value.replace(/\\/g, '/').replace(/^\/+/, '');
+  const candidates = [
+    join(projectRoot, normalized.startsWith('public/') ? normalized : `public/${normalized}`),
+    join(
+      projectRoot,
+      'src/assets',
+      normalized.startsWith('public/') ? normalized.slice(7) : normalized,
+    ),
+    join(projectRoot, 'src/assets/fonts', normalized.split('/').pop() ?? normalized),
+  ];
+
+  return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0];
 }
 
 function walkFiles(dir: string, extensions: Set<string>) {
@@ -166,6 +191,12 @@ function walkFiles(dir: string, extensions: Set<string>) {
 function collectCjk(chars: Set<string>, text: string) {
   for (const char of text) {
     if (cjkPattern.test(char)) chars.add(char);
+  }
+}
+
+function collectNonAscii(chars: Set<string>, text: string) {
+  for (const char of text) {
+    if ((char.codePointAt(0) ?? 0) > 0x7f) chars.add(char);
   }
 }
 
@@ -198,14 +229,17 @@ function extractFrontmatterFields(frontmatter: string) {
   return values.join('\n');
 }
 
-function collectFriendCircleChars(chars: Set<string>) {
+function collectFriendCircleChars(
+  chars: Set<string>,
+  collect: (chars: Set<string>, text: string) => void = collectCjk,
+) {
   if (!existsSync(friendCirclePath)) return;
 
   try {
     const data: unknown = JSON.parse(readFileSync(friendCirclePath, 'utf8'));
     const collectStrings = (value: unknown): void => {
       if (typeof value === 'string') {
-        collectCjk(chars, value);
+        collect(chars, value);
       } else if (Array.isArray(value)) {
         for (const item of value) collectStrings(item);
       } else if (value && typeof value === 'object') {
@@ -219,11 +253,11 @@ function collectFriendCircleChars(chars: Set<string>) {
   }
 }
 
-function runSubset() {
+function runSubset(textFile: string, outputFile: string) {
   const args = [
     sourceFontPath,
-    `--text-file=${uiCharsPath}`,
-    `--output-file=${outputFontPath}`,
+    `--text-file=${textFile}`,
+    `--output-file=${outputFile}`,
     '--flavor=woff2',
     '--with-zopfli',
     '--layout-features=*',
@@ -254,7 +288,7 @@ function runSubset() {
   );
 }
 
-function syncSubsetFontName() {
+function syncSubsetFontName(outputFile: string, familyName: string) {
   const script = `
 from fontTools.ttLib import TTFont
 import sys
@@ -278,61 +312,73 @@ font.save(path)
 `;
   let result;
   for (const command of pythonCommands) {
-    result = spawnSync(command, ['-c', script, outputFontPath, subsetFontName], {
+    result = spawnSync(command, ['-c', script, outputFile, familyName], {
       stdio: 'inherit',
     });
     if (result.status === 0) return;
   }
 
   throw new Error(
-    `Generated subset font, but failed to sync its internal name to ${subsetFontName}. Ensure Python 3 and fonttools are installed. Error: ${result?.error?.message ?? `status ${result?.status}`}`,
+    `Generated subset font, but failed to sync its internal name to ${familyName}. Ensure Python 3 and fonttools are installed. Error: ${result?.error?.message ?? `status ${result?.status}`}`,
   );
 }
 
-const chars = new Set<string>();
+const uiCharsSet = new Set<string>();
 
 for (const contribution of getResolvedPageModuleI18n(navfolioConfig)) {
-  collectCjk(chars, JSON.stringify(contribution.messages));
+  collectCjk(uiCharsSet, JSON.stringify(contribution.messages));
 }
 
 for (const dir of sourceDirs) {
   for (const file of walkFiles(join(projectRoot, dir), sourceExtensions)) {
-    collectCjk(chars, readFileSync(file, 'utf8'));
+    collectCjk(uiCharsSet, readFileSync(file, 'utf8'));
   }
 }
 
 for (const file of sourceFiles) {
   const path = isAbsolute(file) ? file : join(projectRoot, file);
-  if (existsSync(path)) collectCjk(chars, readFileSync(path, 'utf8'));
+  if (existsSync(path)) collectCjk(uiCharsSet, readFileSync(path, 'utf8'));
 }
 
 for (const dir of contentFrontmatterDirs) {
   for (const file of walkFiles(join(projectRoot, dir), frontmatterExtensions)) {
     const frontmatter = extractFrontmatter(readFileSync(file, 'utf8'));
-    collectCjk(chars, extractFrontmatterFields(frontmatter));
+    collectCjk(uiCharsSet, extractFrontmatterFields(frontmatter));
   }
 }
 
 for (const dir of lightweightContentDirs) {
   for (const file of walkFiles(join(projectRoot, dir), frontmatterExtensions)) {
-    collectCjk(chars, readFileSync(file, 'utf8'));
+    collectCjk(uiCharsSet, readFileSync(file, 'utf8'));
   }
 }
 
 for (const file of lightweightContentFiles) {
   const path = join(projectRoot, file);
-  if (existsSync(path)) collectCjk(chars, readFileSync(path, 'utf8'));
+  if (existsSync(path)) collectCjk(uiCharsSet, readFileSync(path, 'utf8'));
 }
 
 // The sync Action writes RSS-derived display text before this build step.
-collectFriendCircleChars(chars);
+collectFriendCircleChars(uiCharsSet);
 
-const uiChars = [...chars].sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!).join('');
+const contentCharsSet = new Set(uiCharsSet);
+for (const file of walkFiles(join(projectRoot, contentRoot), frontmatterExtensions)) {
+  collectNonAscii(contentCharsSet, readFileSync(file, 'utf8'));
+}
+collectFriendCircleChars(contentCharsSet, collectNonAscii);
+
+const uiChars = [...uiCharsSet].sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!).join('');
+const contentChars = [...contentCharsSet]
+  .sort((a, b) => a.codePointAt(0)! - b.codePointAt(0)!)
+  .join('');
 if (!uiChars) throw new Error('No CJK UI characters were found for font subsetting.');
+if (!contentChars) throw new Error('No content characters were found for font subsetting.');
 
 mkdirSync(join(projectRoot, 'scripts/fonts'), { recursive: true });
-mkdirSync(dirname(outputFontPath), { recursive: true });
+mkdirSync(dirname(uiOutputFontPath), { recursive: true });
+mkdirSync(dirname(contentOutputFontPath), { recursive: true });
 writeFileSync(uiCharsPath, `${uiChars}\n`, 'utf8');
+writeFileSync(contentCharsPath, `${contentChars}\n`, 'utf8');
 
 if (!existsSync(sourceFontPath)) {
   throw new Error(
@@ -340,8 +386,21 @@ if (!existsSync(sourceFontPath)) {
   );
 }
 
-runSubset();
-syncSubsetFontName();
+runSubset(uiCharsPath, uiOutputFontPath);
+syncSubsetFontName(uiOutputFontPath, uiSubsetFontName);
+runSubset(contentCharsPath, contentOutputFontPath);
+syncSubsetFontName(contentOutputFontPath, contentSubsetFontName);
+
+const contentSubsetSize = statSync(contentOutputFontPath).size;
+if (contentSubsetSize > 1.5 * 1024 * 1024) {
+  console.warn(
+    `[fonts] Content subset is ${(contentSubsetSize / 1024 / 1024).toFixed(2)}MB. Consider switching to a common-character subset if it keeps growing.`,
+  );
+}
 
 console.log(`Generated ${uiCharsPath} with ${uiChars.length} CJK UI characters.`);
-console.log(`Generated ${subsetFontName} at ${outputFontPath} from ${sourceFontPath}.`);
+console.log(`Generated ${contentCharsPath} with ${contentChars.length} content characters.`);
+console.log(`Generated ${uiSubsetFontName} at ${uiOutputFontPath} from ${sourceFontPath}.`);
+console.log(
+  `Generated ${contentSubsetFontName} at ${contentOutputFontPath} (${(contentSubsetSize / 1024).toFixed(0)}KB).`,
+);

@@ -42,7 +42,6 @@
     "astro": "^7.3.8",
     "astro-expressive-code": "^0.44.1",
     "date-fns": "^4.4.0",
-    "echarts": "^6.1.0",
     "github-slugger": "^2.0.0",
     "katex": "^0.16.47",
     "lucide-astro": "^0.556.0",

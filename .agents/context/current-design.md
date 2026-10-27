@@ -75,6 +75,8 @@ collection、默认 navigation、scaffold 和 i18n contribution 都应消失。
 - docs 发布：先推送 `astro-navfolio-docs`，再更新 gitlink 并运行 docs build
 - Friend Circle：部署 Action → `public/friend-circle.json` → MDX component/font
   subset consumer
+- 字体：完整源字体保存在 `src/assets/fonts`，构建时生成 UI / 正文两个 WOFF2 子集到
+  `public/fonts`，生产产物不包含完整 TTF。
 - WeRead：生态 producer 已存在，但主站无 dependency、workflow、route 或 component
   consumer
 
