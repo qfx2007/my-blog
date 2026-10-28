@@ -68,7 +68,7 @@ export default defineConfig({
   base: resolvedBase,
   prefetch: {
     prefetchAll: true,
-    defaultStrategy: 'viewport',
+    defaultStrategy: 'hover',
   },
   markdown: {
     remarkPlugins: astroPluginConfig.remarkPlugins,

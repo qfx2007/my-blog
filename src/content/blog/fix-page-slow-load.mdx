@@ -1,0 +1,129 @@
+---
+title: '加载缓慢问题的一次系统优化'
+description: '针对本站加载缓慢问题的系统性性能优化：涵盖字体子集化、图片压缩、缓存配置与预加载策略。详细记录了定位问题、分析原理以及具体实施的过程。'
+date: '2026-10-24'
+draft: false
+tags:
+  - 性能优化
+  - 前端
+  - Astro
+  - 字体
+categories:
+  - 技术笔记
+series:
+  - 前端
+comments: true
+sidebar:
+  enable: true
+  toc: true
+  relatedPosts: true
+---
+
+这段时间反复觉得本站打开速度不够快：首屏渲染需要等一等；点击链接跳到另一个页面时（比如从首页点“作品集”）更慢，基本上要等 4~7 秒才进入目标页面。虽然在这期间浏览器一直停留在当前页面，并不会出现整页空白，只是"跳不动"这种现象；另外还有一些资源加载不出来，比如 之前about 页的 ECharts 图表区域直接不显示、还有某一些项目文章详情页里面的视频这种。
+
+光凭感觉很难说清到底慢在哪里，也很难很难定位问题，于是我干脆打开DevTools开发者工具，去分析网页加载的每一个环节，把网页加载的整个过程拆开来看。这才发现，原来是好几个平时注意不到的隐形开销叠加在了一起，硬生生把加载时间拖长了。
+
+这篇文章记录一下我是怎么定位、又是怎么一项项拆掉这些问题的。不是某一个"大招"，而是一堆小改动攒起来的效果。
+
+## 先看问题出在哪
+
+---
+
+在 Chromium DevTools 的网络面板里，将资源按加载耗时排序，排在前几条的资源立刻暴露出性能瓶颈：
+
+- 一个 **体积巨大的中文 TTF 字体**（LXGW WenKai），每个页面都要强制加载，是最大的性能开销
+- **缺失缓存策略**导致每次刷新都要重新拉取静态资源；**缺失预加载机制**导致页面间跳转只能等待下一次请求
+- 部分图片与视频资源**未经压缩且未做懒加载处理**，导致首屏加载受阻，且在弱网环境下容易出现加载失败的情况
+
+定位清楚后，优化的优先级就非常明确了：首先削减最大的字体开销，接着处理运行时 JS、图片、缓存配置以及预加载策略。
+
+## 优化一：把全量字体拆成两个子集
+
+---
+
+### 问题本质
+
+中文 TTF 是"全字符"字体，一个完整的文楷 TTF 内嵌了几万个字形的轮廓数据，所以才能到 25MB 量级。但一个个人博客真正用到的字远没那么多——导航、按钮、卡片标签这些 UI 文本就几百个字，正文用到的也就一两千字。剩下的字形，用户这辈子都用不上，却每次都在白白下载。
+
+### 做法：构建期生成 WOFF2 子集
+
+思路很直接：**部署产物里根本不放完整 TTF，而是构建时按实际用到的字符，生成两个 WOFF2 子集**。
+
+我把字体源文件从 `public/fonts/` 挪到了 `src/assets/fonts/`（不参与部署），再写了一个构建脚本 `scripts/fonts/subset-ui-font.ts`，在 `bun run build` 时做三件事：
+
+1. 收集 **UI 字符集**：扫导航、按钮、组件文案、友链名（`public/friend-circle.json`）里的 CJK，写到 `ui-chars.txt`；
+2. 收集 **正文字符集**：扫所有文章 body + frontmatter 里的非 ASCII 字符，写到 `content-chars.txt`；
+3. 用 **Python + FontTools（`pyftsubset`）+ Brotli** 分别生成两份 WOFF2 子集。
+
+为什么拆成两份、而不是合成一份？因为它们的"使用面"不一样：
+
+- **UI 子集**体积小，但**每个页面都要用**（导航、卡片、标签）；
+- **正文子集**相对更大，只有文章页才需要。
+
+拆开后，非文章页可以只挂更小的 UI 子集，字体开销进一步压低。两个子集分别在 `BaseHead.astro` 里声明为两个 `@font-face`：
+
+```css
+@font-face{font-family:"LXGW WenKai UI Subset";src:url(/fonts/LXGWWenKai-Regular-ui-subset.woff2);font-display:swap;}
+@font-face{font-family:"LXGW WenKai Content Subset";src:url(/fonts/LXGWWenKai-Regular-content-subset.woff2);font-display:swap;}
+```
+
+CSS 变量侧也相应改成：`--font-config-zh` 指向正文子集（阅读正文用），`--font-config-zh-subset` 指向 UI 子集（界面 chrome 用）。
+
+> **前后对比**：全量中文字体从约 25MB 降到两份子集合计约 440KB，砍掉 **98%** 左右。这是整个优化里量级最大的一笔。
+
+顺带做了个收尾：之前为了“正文子集没到、整页用全字体兜底”写了个 `FullFontWarmup.astro`，用 `requestIdleCallback` 在首屏之后预取那份全量字体。现在根本不再部署全字体，这个机制也就没意义了，直接删掉。
+
+> 代价：构建**硬依赖 Python 3 / FontTools / Brotli**，脚本会优先用仓库里的 `.venv`。缺了这些工具构建会直接失败，这是刻意的——字体子集是部署的一部分，不能默默跳过。
+
+## 优化二：图片压缩与懒加载
+
+---
+
+两处小改动，但都是"顺手但有效"：
+
+**1. 头像 PNG → WebP。** 站点头像从 800 多 KB 的 PNG 换成 **25KB** 左右的 WebP，`site.toml` 里指向 `/images/avatar.webp`
+
+**2. MDX 图片默认懒加载。** 给 `ZoomableImage` 加了两个默认值：
+
+```astro
+const { ..., loading = 'lazy', decoding = 'async', ...imageProps } = Astro.props;
+```
+
+正文里成堆的配图不再阻塞首屏，进视口才加载。
+
+## 优化三：让二次访问不重拉
+
+---
+
+**缓存头。** 站点部署在 Cloudflare，于是在 `public/_headers` 里按资源类型给了不同的缓存策略：
+
+```text
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=2592000
+
+/images/*
+  Cache-Control: public, max-age=604800
+```
+
+策略的核心在于 /_astro/* 目录：Astro 的构建产物默认包含内容哈希指纹，这意味着只要文件内容不发生变化，文件名就保持不变。
+因此可以安全地配置 immutable 及一年的超长缓存，使老访客在二次访问时几乎实现零下载。
+
+**悬停预加载。** 在 `astro.config.mjs` 里开了 Astro 的 prefetch：
+
+```js
+prefetch: {
+  prefetchAll: true,
+  defaultStrategy: 'hover',
+},
+```
+
+这意味着只有**当鼠标悬停在链接上时，才会触发对应页面的预取**。这种策略既符合“用户产生明确意图后才加载”的原则，也能**尽量避免带宽浪费和网络连接被长时间占用**。对于个人博客而言，这种改动带来的体验差异
+微乎其微，但整体设计更符合标准规范，也有效改善了过去“点击链接后需要等待数秒才能跳转”的交互体验问题。
+
+## 回顾和总结
+---
+
+回顾整个优化过程，“加载慢”从来不是由单一因素造成的，而是**核心大资源未妥善处理与多项隐性开销叠加**的结果。其中收益最显著的是字体体积的削减；其余各项优化单看虽不起眼，但综合起来，显著提升了首屏渲染速度、页面跳转的流畅度，并降低二次访问的加载成本。
