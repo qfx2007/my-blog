@@ -34,12 +34,12 @@ interface Props {
 }
 
 const defaultPlaceholders: Record<ApplicationField, string> = {
-  name: '必填，站点名称。',
-  url: '必填，站点主页地址。',
-  bio: '可选，站点描述或个人 bio，最多 160 字。',
-  avatar: '可选，圆形头像地址。',
-  backgroundImage: '可选，卡片背景图地址。',
-  rss: '可选，供友链朋友圈同步器读取的 RSS 或 Atom 地址。',
+  name: '必填，站点名称',
+  url: '必填，站点主页地址',
+  bio: '可选，站点描述或个人 bio，最多 160 字',
+  avatar: '可选，站点的头像地址',
+  backgroundImage: '可选，卡片背景图地址',
+  rss: '可选，供友链朋友圈同步器读取的 RSS 或 Atom 地址',
 };
 
 const defaultIssueFieldMap: Record<ApplicationField, string> = {
@@ -198,7 +198,7 @@ const initialPreview = formatApplicationPreview(JSON.stringify(initialData, null
         <form class="friend-link-application__form" data-application-form>
           <div class="friend-link-application__fields">
             <label class="friend-link-application__field">
-              <span>站点名称 <em>必填</em></span>
+              <span>站点名称</span>
               <input
                 name="name"
                 type="text"
@@ -211,7 +211,7 @@ const initialPreview = formatApplicationPreview(JSON.stringify(initialData, null
             </label>
 
             <label class="friend-link-application__field">
-              <span>站点地址 <em>必填</em></span>
+              <span>站点地址</span>
               <input
                 name="url"
                 type="url"
@@ -892,14 +892,6 @@ const initialPreview = formatApplicationPreview(JSON.stringify(initialData, null
     font-weight: 650;
     line-height: 1.4;
     white-space: nowrap;
-  }
-
-  .friend-link-application__field em {
-    color: var(--paper-ink-faint);
-    font-family: var(--font-meta);
-    font-size: 0.72rem;
-    font-style: normal;
-    font-weight: 500;
   }
 
   .friend-link-application__field input,
