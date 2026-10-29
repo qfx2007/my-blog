@@ -72,17 +72,15 @@ const ui = getUiText(siteConfig);
       />
       <GroupNav activeView="series" />
 
-      {
-        series.length > 0 ? (
-          <section class="series-list" aria-label={ui.groups.series}>
-            {series.map((item) => (
-              <SeriesCard name={item.name} slug={item.slug} posts={item.posts} />
-            ))}
-          </section>
-        ) : (
-          <p class="empty-note">{ui.groups.emptySeries}</p>
-        )
-      }
+      {series.length > 0 ? (
+        <section class="series-list" aria-label={ui.groups.series}>
+          {series.map((item) => (
+            <SeriesCard name={item.name} slug={item.slug} posts={item.posts} />
+          ))}
+        </section>
+      ) : (
+        <p class="empty-note">{ui.groups.emptySeries}</p>
+      )}
     </main>
     <Footer />
   </body>

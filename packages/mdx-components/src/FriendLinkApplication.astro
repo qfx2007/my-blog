@@ -178,13 +178,11 @@ const initialPreview = formatApplicationPreview(JSON.stringify(initialData, null
             <h2>{title}</h2>
             <p>{description}</p>
           </div>
-          {
-            safeShowLivePreview && (
-              <div class="friend-link-application__card-preview" data-application-card-preview>
-                <FriendLinkCard items={[initialData]} columns={1} preview />
-              </div>
-            )
-          }
+          {safeShowLivePreview && (
+            <div class="friend-link-application__card-preview" data-application-card-preview>
+              <FriendLinkCard items={[initialData]} columns={1} preview />
+            </div>
+          )}
           <button
             class="friend-link-application__switch friend-link-application__switch--next"
             type="button"
@@ -259,8 +257,8 @@ const initialPreview = formatApplicationPreview(JSON.stringify(initialData, null
                 name="bio"
                 rows="2"
                 placeholder={placeholders.bio}
-                maxlength={safeBioMaxLength}>{initialData.bio}</textarea
-              >
+                maxlength={safeBioMaxLength}
+              >{initialData.bio}</textarea>
             </label>
 
             <label class="friend-link-application__field">

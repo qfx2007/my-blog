@@ -7,9 +7,13 @@ const { quote } = Astro.props as { quote: Quote };
 ---
 
 <article class="glass-card quote-card">
-  <div class="quote-mark" aria-hidden="true">"</div>
+  <div class="quote-mark" aria-hidden="true">
+    "
+  </div>
   <blockquote>
-    {quote.text.map((line) => <span>{line}</span>)}
+    {quote.text.map((line) => (
+      <span>{line}</span>
+    ))}
   </blockquote>
 </article>
 

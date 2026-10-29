@@ -48,28 +48,26 @@ const formatDate = new Intl.DateTimeFormat(ui.locale, {
     </div>
   </div>
 
-  {
-    showLatest && heatmap.latestPosts.length > 0 && (
-      <aside class="latest-tip" aria-label={ui.heatmap.latestPublishedPosts}>
-        <strong>{ui.heatmap.latest}</strong>
-        <div class="latest-list">
-          {heatmap.latestPosts.map((post) => (
-            <a
-              class="latest-link"
-              href={post.href}
-              aria-label={ui.heatmap.openLatestPost(post.title)}
-            >
-              <em>{post.title}</em>
-              <time datetime={post.date.toISOString()}>{formatDate.format(post.date)}</time>
-              <span class="latest-icon" aria-hidden="true">
-                <Icon name="external" size={15} />
-              </span>
-            </a>
-          ))}
-        </div>
-      </aside>
-    )
-  }
+  {showLatest && heatmap.latestPosts.length > 0 && (
+    <aside class="latest-tip" aria-label={ui.heatmap.latestPublishedPosts}>
+      <strong>{ui.heatmap.latest}</strong>
+      <div class="latest-list">
+        {heatmap.latestPosts.map((post) => (
+          <a
+            class="latest-link"
+            href={post.href}
+            aria-label={ui.heatmap.openLatestPost(post.title)}
+          >
+            <em>{post.title}</em>
+            <time datetime={post.date.toISOString()}>{formatDate.format(post.date)}</time>
+            <span class="latest-icon" aria-hidden="true">
+              <Icon name="external" size={15} />
+            </span>
+          </a>
+        ))}
+      </div>
+    </aside>
+  )}
 </article>
 
 <style>

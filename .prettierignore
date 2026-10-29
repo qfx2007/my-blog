@@ -8,3 +8,5 @@ public/favicon.ico
 # Preserve author-chosen frontmatter quote style in content files.
 src/content/**/*.md
 src/content/**/*.mdx
+
+src/docs

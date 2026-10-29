@@ -19,20 +19,18 @@ const provider = frontmatter.comments === false ? null : getCommentProvider(comm
 const shouldRender = provider ? canRenderProvider(comments, provider) : false;
 ---
 
-{
-  shouldRender && provider && (
-    <section class="comment-section" aria-label="Comments" data-comment-path={pathname}>
-      <div class="comment-section-heading">
-        <p>Comments</p>
-        <span>Quiet notes for this article.</span>
-      </div>
+{shouldRender && provider && (
+  <section class="comment-section" aria-label="Comments" data-comment-path={pathname}>
+    <div class="comment-section-heading">
+      <p>Comments</p>
+      <span>Quiet notes for this article.</span>
+    </div>
 
-      {provider === 'giscus' && <GiscusComment config={comments.giscus} />}
-      {provider === 'utterances' && <UtterancesComment config={comments.utterances} />}
-      {provider === 'waline' && <WalineComment config={comments.waline} />}
-    </section>
-  )
-}
+    {provider === 'giscus' && <GiscusComment config={comments.giscus} />}
+    {provider === 'utterances' && <UtterancesComment config={comments.utterances} />}
+    {provider === 'waline' && <WalineComment config={comments.waline} />}
+  </section>
+)}
 
 <style>
   .comment-section {

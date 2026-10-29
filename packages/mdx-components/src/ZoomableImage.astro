@@ -21,32 +21,30 @@ const image = src && typeof src === 'object' && 'src' in src ? src : undefined;
 const resolvedSrc = typeof src === 'string' ? src : image?.src;
 ---
 
-{
-  resolvedSrc ? (
-    <span class="navfolio-zoomable" data-navfolio-zoomable>
-      <>
-        <img
-          {...imageProps}
-          src={resolvedSrc}
-          alt={alt}
-          width={width ?? image?.width}
-          height={height ?? image?.height}
-          loading={loading}
-          decoding={decoding}
-          class={[classAttr, className].filter(Boolean).join(' ')}
-        />
-        <span aria-hidden="true">
-          <ZoomIn size={20} />
-        </span>
-      </>
-    </span>
-  ) : null
-}
+{resolvedSrc ? (
+  <span class="navfolio-zoomable" data-navfolio-zoomable>
+    <>
+      <img
+        {...imageProps}
+        src={resolvedSrc}
+        alt={alt}
+        width={width ?? image?.width}
+        height={height ?? image?.height}
+        loading={loading}
+        decoding={decoding}
+        class={[classAttr, className].filter(Boolean).join(' ')}
+      />
+      <span aria-hidden="true">
+        <ZoomIn size={20} />
+      </span>
+    </>
+  </span>
+) : null}
 <dialog class="navfolio-zoom-dialog" data-navfolio-zoom-dialog>
-  <button type="button" aria-label="Close image preview" data-close><X size={20} /></button><img
-    alt=""
-    data-image
-  />
+  <button type="button" aria-label="Close image preview" data-close>
+    <X size={20} />
+  </button>
+  <img alt="" data-image />
 </dialog>
 <script>
   const init = () => {

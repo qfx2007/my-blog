@@ -150,25 +150,23 @@ for (const side of ['left', 'right'] as const) {
 <div class="skill-pie" data-skill-pie>
   <!-- 自定义图例：点击凸出扇区，而不是隐藏数据 -->
   <div class="skill-pie__legend">
-    {
-      items.map((item, index) => (
-        <button
-          type="button"
-          class="skill-pie__legend-item"
-          style={sliceStyle(index, item.value)}
-          data-name={item.name}
-          data-legend
-          aria-pressed="false"
-          aria-label={`${item.name}，${levelName(item.value)}${levelMark(item.value)}`}
-        >
-          <span class="skill-pie__swatch" aria-hidden="true" />
-          <span class="skill-pie__legend-name">{item.name}</span>
-          <span class="skill-pie__legend-level" aria-hidden="true">
-            {levelMark(item.value)}
-          </span>
-        </button>
-      ))
-    }
+    {items.map((item, index) => (
+      <button
+        type="button"
+        class="skill-pie__legend-item"
+        style={sliceStyle(index, item.value)}
+        data-name={item.name}
+        data-legend
+        aria-pressed="false"
+        aria-label={`${item.name}，${levelName(item.value)}${levelMark(item.value)}`}
+      >
+        <span class="skill-pie__swatch" aria-hidden="true" />
+        <span class="skill-pie__legend-name">{item.name}</span>
+        <span class="skill-pie__legend-level" aria-hidden="true">
+          {levelMark(item.value)}
+        </span>
+      </button>
+    ))}
   </div>
   <div class="skill-pie__chart">
     <svg
@@ -177,37 +175,35 @@ for (const side of ['left', 'right'] as const) {
       role="img"
       aria-label={ariaSummary}
     >
-      {
-        slices.map((slice) => (
-          <g
-            class="skill-pie__slice-group"
-            style={slice.style}
-            data-slice-group
+      {slices.map((slice) => (
+        <g
+          class="skill-pie__slice-group"
+          style={slice.style}
+          data-slice-group
+          data-name={slice.name}
+        >
+          <path class="skill-pie__slice" d={slice.path} data-name={slice.name} data-slice>
+            <title>{`${slice.name} · ${levelName(slice.value)}${levelMark(slice.value)} · ${slice.percent}%`}</title>
+          </path>
+          <path
+            class="skill-pie__label-line"
+            d={`M ${slice.edgeX.toFixed(2)} ${slice.edgeY.toFixed(2)} L ${slice.elbowX.toFixed(2)} ${slice.labelY.toFixed(2)} L ${slice.lineEndX.toFixed(2)} ${slice.labelY.toFixed(2)}`}
+            aria-hidden="true"
+          />
+          <text
+            class="skill-pie__label"
+            x={slice.labelX}
+            y={slice.labelY}
+            text-anchor={slice.labelSide === 'right' ? 'start' : 'end'}
+            dominant-baseline="middle"
+            aria-hidden="true"
+            data-label
             data-name={slice.name}
           >
-            <path class="skill-pie__slice" d={slice.path} data-name={slice.name} data-slice>
-              <title>{`${slice.name} · ${levelName(slice.value)}${levelMark(slice.value)} · ${slice.percent}%`}</title>
-            </path>
-            <path
-              class="skill-pie__label-line"
-              d={`M ${slice.edgeX.toFixed(2)} ${slice.edgeY.toFixed(2)} L ${slice.elbowX.toFixed(2)} ${slice.labelY.toFixed(2)} L ${slice.lineEndX.toFixed(2)} ${slice.labelY.toFixed(2)}`}
-              aria-hidden="true"
-            />
-            <text
-              class="skill-pie__label"
-              x={slice.labelX}
-              y={slice.labelY}
-              text-anchor={slice.labelSide === 'right' ? 'start' : 'end'}
-              dominant-baseline="middle"
-              aria-hidden="true"
-              data-label
-              data-name={slice.name}
-            >
-              {slice.name}
-            </text>
-          </g>
-        ))
-      }
+            {slice.name}
+          </text>
+        </g>
+      ))}
     </svg>
   </div>
 </div>

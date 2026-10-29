@@ -22,21 +22,21 @@ const {
   aria-label={label}
   style={aspectRatio ? `--carousel-aspect-ratio: ${aspectRatio};` : undefined}
 >
-  <div class="navfolio-carousel__track" data-track><slot /></div>
-  {
-    showControls ? (
-      <div class="navfolio-carousel__controls">
-        <>
-          <button type="button" aria-label="Previous slide" data-prev>
-            <ChevronLeft size={18} />
-          </button>
-          <button type="button" aria-label="Next slide" data-next>
-            <ChevronRight size={18} />
-          </button>
-        </>
-      </div>
-    ) : null
-  }
+  <div class="navfolio-carousel__track" data-track>
+    <slot />
+  </div>
+  {showControls ? (
+    <div class="navfolio-carousel__controls">
+      <>
+        <button type="button" aria-label="Previous slide" data-prev>
+          <ChevronLeft size={18} />
+        </button>
+        <button type="button" aria-label="Next slide" data-next>
+          <ChevronRight size={18} />
+        </button>
+      </>
+    </div>
+  ) : null}
 </section>
 <script>
   const init = () =>

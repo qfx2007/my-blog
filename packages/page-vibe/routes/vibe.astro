@@ -569,127 +569,122 @@ const vibes = await Promise.all(
         </header>
 
         <section class="vibe-stream" aria-label={i18n.t('vibe.notes')}>
-          {
-            showTrail && (
-              <svg class="vibe-thread" aria-hidden="true">
-                <defs>
-                  <linearGradient id="vibe-pencil-fade" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
-                    <stop offset="16%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
-                    <stop offset="84%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
-                    <stop offset="100%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
-                  </linearGradient>
-                  <filter id="vibe-pencil-texture" x="-12%" y="-12%" width="124%" height="124%">
-                    <feTurbulence
-                      type="fractalNoise"
-                      baseFrequency="0.9"
-                      numOctaves="2"
-                      seed="8"
-                      result="grain"
-                    />
-                    <feDisplacementMap in="SourceGraphic" in2="grain" scale="0.65" />
-                  </filter>
-                </defs>
-                <path class="vibe-thread-path" data-vibe-thread-path />
-                <path class="vibe-thread-grain" data-vibe-thread-grain />
-              </svg>
-            )
-          }
-          {
-            vibes.map(({ entry, Content, align, imageLayout }, index) => (
-              <article
-                class:list={[
-                  'vibe-item',
-                  align,
-                  entry.data.size,
-                  entry.data.type,
-                  index >= 6 && 'is-vibe-hidden',
-                ]}
-                style={`--vibe-index: ${index}`}
-                data-vibe-item
-                data-vibe-index={index}
-              >
-                {showTrail && <span class="vibe-dot" data-vibe-dot aria-hidden="true" />}
-                <div class="vibe-meta">
-                  {entry.data.mood && <span>{entry.data.mood}</span>}
-                  {entry.data.location && <span>{entry.data.location}</span>}
-                  <FormattedDate date={entry.data.date} />
-                  {entry.data.tags.length > 0 && (
-                    <span class="vibe-tags">
-                      {entry.data.tags.map((tag) => (
-                        <span class="vibe-tag">#{tag}</span>
-                      ))}
-                    </span>
+          {showTrail && (
+            <svg class="vibe-thread" aria-hidden="true">
+              <defs>
+                <linearGradient id="vibe-pencil-fade" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
+                  <stop offset="16%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
+                  <stop offset="84%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
+                  <stop offset="100%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
+                </linearGradient>
+                <filter id="vibe-pencil-texture" x="-12%" y="-12%" width="124%" height="124%">
+                  <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0.9"
+                    numOctaves="2"
+                    seed="8"
+                    result="grain"
+                  />
+                  <feDisplacementMap in="SourceGraphic" in2="grain" scale="0.65" />
+                </filter>
+              </defs>
+              <path class="vibe-thread-path" data-vibe-thread-path />
+              <path class="vibe-thread-grain" data-vibe-thread-grain />
+            </svg>
+          )}
+          {vibes.map(({ entry, Content, align, imageLayout }, index) => (
+            <article
+              class:list={[
+                'vibe-item',
+                align,
+                entry.data.size,
+                entry.data.type,
+                index >= 6 && 'is-vibe-hidden',
+              ]}
+              style={`--vibe-index: ${index}`}
+              data-vibe-item
+              data-vibe-index={index}
+            >
+              {showTrail && <span class="vibe-dot" data-vibe-dot aria-hidden="true" />}
+              <div class="vibe-meta">
+                {entry.data.mood && <span>{entry.data.mood}</span>}
+                {entry.data.location && <span>{entry.data.location}</span>}
+                <FormattedDate date={entry.data.date} />
+                {entry.data.tags.length > 0 && (
+                  <span class="vibe-tags">
+                    {entry.data.tags.map((tag) => (
+                      <span class="vibe-tag">#{tag}</span>
+                    ))}
+                  </span>
+                )}
+              </div>
+
+              {entry.data.title && <h2 class="vibe-heading">{entry.data.title}</h2>}
+
+              {entry.data.images.length > 0 && (
+                <div
+                  class:list={['vibe-images', imageLayout.isCollapsible && 'is-collapsible']}
+                  style={`--vibe-image-columns: ${imageLayout.columns};`}
+                  data-vibe-image-group
+                  data-zoomable-gallery
+                  data-vibe-image-count={imageLayout.count}
+                  data-vibe-image-columns={imageLayout.columns}
+                  aria-label={i18n.t('vibe.images', { title: entry.data.title ?? entry.id })}
+                >
+                  {entry.data.images.map((image, imageIndex) => (
+                    <figure
+                      class:list={[
+                        'vibe-image',
+                        imageLayout.isCollapsible &&
+                          imageIndex >= imageLayout.visibleCount &&
+                          'is-extra',
+                      ]}
+                      data-zoomable-image
+                      role="button"
+                      tabindex="0"
+                      aria-label={i18n.t('vibe.image', {
+                        title: entry.data.title ?? entry.id,
+                        index: imageIndex + 1,
+                      })}
+                    >
+                      <SmartImage
+                        src={image}
+                        alt=""
+                        widths={[360, 520, 720]}
+                        sizes="(max-width: 720px) 100vw, 420px"
+                        data-zoomable-image-target
+                      />
+                    </figure>
+                  ))}
+                  {imageLayout.isCollapsible && (
+                    <button
+                      class="vibe-image-toggle"
+                      type="button"
+                      aria-expanded="false"
+                      data-vibe-image-toggle
+                      data-expand-label={`展开 ${imageLayout.hiddenCount} 张`}
+                      data-collapse-label="收起图片"
+                    >
+                      展开 {imageLayout.hiddenCount} 张
+                    </button>
                   )}
                 </div>
+              )}
 
-                {entry.data.title && <h2 class="vibe-heading">{entry.data.title}</h2>}
-
-                {entry.data.images.length > 0 && (
-                  <div
-                    class:list={['vibe-images', imageLayout.isCollapsible && 'is-collapsible']}
-                    style={`--vibe-image-columns: ${imageLayout.columns};`}
-                    data-vibe-image-group
-                    data-zoomable-gallery
-                    data-vibe-image-count={imageLayout.count}
-                    data-vibe-image-columns={imageLayout.columns}
-                    aria-label={i18n.t('vibe.images', { title: entry.data.title ?? entry.id })}
-                  >
-                    {entry.data.images.map((image, imageIndex) => (
-                      <figure
-                        class:list={[
-                          'vibe-image',
-                          imageLayout.isCollapsible &&
-                            imageIndex >= imageLayout.visibleCount &&
-                            'is-extra',
-                        ]}
-                        data-zoomable-image
-                        role="button"
-                        tabindex="0"
-                        aria-label={i18n.t('vibe.image', {
-                          title: entry.data.title ?? entry.id,
-                          index: imageIndex + 1,
-                        })}
-                      >
-                        <SmartImage
-                          src={image}
-                          alt=""
-                          widths={[360, 520, 720]}
-                          sizes="(max-width: 720px) 100vw, 420px"
-                          data-zoomable-image-target
-                        />
-                      </figure>
-                    ))}
-                    {imageLayout.isCollapsible && (
-                      <button
-                        class="vibe-image-toggle"
-                        type="button"
-                        aria-expanded="false"
-                        data-vibe-image-toggle
-                        data-expand-label={`展开 ${imageLayout.hiddenCount} 张`}
-                        data-collapse-label="收起图片"
-                      >
-                        展开 {imageLayout.hiddenCount} 张
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                <div class="vibe-body">
-                  <Content />
-                </div>
-              </article>
-            ))
-          }
+              <div class="vibe-body">
+                <Content />
+              </div>
+            </article>
+          ))}
         </section>
       </div>
     </main>
     <Footer />
-    {
-      showTrail && (
-        <script>import {mountVibeThread} from './lib/vibe-thread'; mountVibeThread();</script>
-      )
-    }
+    {showTrail && <script>
+      import { mountVibeThread } from './lib/vibe-thread';
+      mountVibeThread();
+    </script>}
     <script>
       const mountVibeProgressiveStream = () => {
         const stream = document.querySelector<HTMLElement>('.vibe-stream');

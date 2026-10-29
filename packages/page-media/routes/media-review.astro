@@ -85,7 +85,9 @@ function parentRoute(pathname: string, id: string) {
   <body class="media-review-page">
     <BlogTopNav />
     <main data-pagefind-body>
-      <a class="media-review-back" href={`${mediaRoute}/`}>{ui.media.backToShelf}</a>
+      <a class="media-review-back" href={`${mediaRoute}/`}>
+        {ui.media.backToShelf}
+      </a>
       <article>
         <header class="media-review-header">
           <figure
@@ -93,13 +95,11 @@ function parentRoute(pathname: string, id: string) {
             data-media-type={media.data.type}
             data-cover-aspect={media.data.coverAspect}
           >
-            {
-              coverSrc ? (
-                <img src={coverSrc} alt={`${media.data.title} cover`} />
-              ) : (
-                <span>{ui.media.types[media.data.type]}</span>
-              )
-            }
+            {coverSrc ? (
+              <img src={coverSrc} alt={`${media.data.title} cover`} />
+            ) : (
+              <span>{ui.media.types[media.data.type]}</span>
+            )}
           </figure>
           <div class="media-review-intro">
             <p class="media-review-kicker">{reviewKind}</p>
@@ -108,7 +108,9 @@ function parentRoute(pathname: string, id: string) {
             <div class="media-review-details">
               {media.data.completedAt ? <span>{media.data.completedAt.getFullYear()}</span> : null}
               {stars ? <span aria-label={ui.media.ratingLabel}>{stars}</span> : null}
-              {media.data.tags?.map((tag) => <span>#{tag}</span>)}
+              {media.data.tags?.map((tag) => (
+                <span>#{tag}</span>
+              ))}
             </div>
           </div>
         </header>

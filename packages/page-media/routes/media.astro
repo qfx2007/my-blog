@@ -278,59 +278,53 @@ function isPageMeta(value: unknown): value is { title: string; subtitle: string;
             <p class="media-note">{pageMeta.note}</p>
           </header>
           <nav class="media-mobile-nav" aria-label={ui.media.sectionsLabel} data-media-nav>
-            {
-              sections.map((section, index) => (
-                <a href={`#${section.id}`} aria-current={index === 0 ? 'true' : undefined}>
-                  {section.label} <span>{section.items.length}</span>
-                </a>
-              ))
-            }
+            {sections.map((section, index) => (
+              <a href={`#${section.id}`} aria-current={index === 0 ? 'true' : undefined}>
+                {section.label} <span>{section.items.length}</span>
+              </a>
+            ))}
           </nav>
-          {
-            sections.map((section) => (
-              <section class="media-section" id={section.id} data-media-section>
-                <div class="media-section-heading">
-                  <>
-                    <h2>{section.label}</h2>
-                    <span class="media-count">
-                      {section.items.length} · {section.description}
-                    </span>
-                  </>
-                </div>
-                {section.items.length ? (
-                  <MediaShelf
-                    columns={4}
-                    items={section.items.map((entry) => ({
-                      title: entry.data.title,
-                      creator: entry.data.creator,
-                      type: entry.data.type,
-                      cover: entry.data.cover,
-                      coverAspect: entry.data.coverAspect,
-                      rating: entry.data.rating,
-                      href: entry.data.externalUrl,
-                      reviewHref: entry.data.review ? `${mediaRoute}/${entry.id}/` : undefined,
-                      reviewLabel: entry.data.review ? ui.media.readReview : undefined,
-                    }))}
-                  />
-                ) : (
-                  <p class="media-empty">{ui.media.empty}</p>
-                )}
-              </section>
-            ))
-          }
+          {sections.map((section) => (
+            <section class="media-section" id={section.id} data-media-section>
+              <div class="media-section-heading">
+                <>
+                  <h2>{section.label}</h2>
+                  <span class="media-count">
+                    {section.items.length} · {section.description}
+                  </span>
+                </>
+              </div>
+              {section.items.length ? (
+                <MediaShelf
+                  columns={4}
+                  items={section.items.map((entry) => ({
+                    title: entry.data.title,
+                    creator: entry.data.creator,
+                    type: entry.data.type,
+                    cover: entry.data.cover,
+                    coverAspect: entry.data.coverAspect,
+                    rating: entry.data.rating,
+                    href: entry.data.externalUrl,
+                    reviewHref: entry.data.review ? `${mediaRoute}/${entry.id}/` : undefined,
+                    reviewLabel: entry.data.review ? ui.media.readReview : undefined,
+                  }))}
+                />
+              ) : (
+                <p class="media-empty">{ui.media.empty}</p>
+              )}
+            </section>
+          ))}
         </div>
         <nav class="media-nav" aria-label={ui.media.sectionsLabel} data-media-nav>
           <p>{ui.media.browse}</p>
-          {
-            sections.map((section, index) => (
-              <a href={`#${section.id}`} aria-current={index === 0 ? 'true' : undefined}>
-                <>
-                  <span>{section.label}</span>
-                  <span>{section.items.length}</span>
-                </>
-              </a>
-            ))
-          }
+          {sections.map((section, index) => (
+            <a href={`#${section.id}`} aria-current={index === 0 ? 'true' : undefined}>
+              <>
+                <span>{section.label}</span>
+                <span>{section.items.length}</span>
+              </>
+            </a>
+          ))}
         </nav>
       </div>
     </main>

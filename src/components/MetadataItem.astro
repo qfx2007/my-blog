@@ -37,15 +37,15 @@ const iconName = iconByKind[kind];
     className,
   ]}
 >
-  {
-    separated && !useIconSeparator && (
-      <span class="metadata-separator" aria-hidden="true">
-        {metadataSeparator}
-      </span>
-    )
-  }
+  {separated && !useIconSeparator && (
+    <span class="metadata-separator" aria-hidden="true">
+      {metadataSeparator}
+    </span>
+  )}
   {useIconSeparator && iconName && <Icon name={iconName} size={14} class="metadata-icon" />}
-  <span class="metadata-content"><slot /></span>
+  <span class="metadata-content">
+    <slot />
+  </span>
 </span>
 
 <style>

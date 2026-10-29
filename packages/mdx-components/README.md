@@ -58,7 +58,6 @@ field keeps its semantic Chinese label to the left of a bounded value control.
 
 ```astro
 import FriendLinkApplication from '@navfolio/mdx-components/FriendLinkApplication.astro';
-
 <FriendLinkApplication
   repository="owner/repository"
   appearance="seamless"
@@ -96,7 +95,6 @@ For production, periodically generate a JSON file with GitHub Actions and pass i
 
 ```astro
 import MusicPlayer from '@navfolio/mdx-components/MusicPlayer.astro';
-
 <MusicPlayer title="Example" artist="Navfolio" src="/audio/example.mp3" theme="vinyl" />
 ```
 
@@ -117,7 +115,6 @@ For a linked long-form review, give an item `reviewHref` and the localized
 
 ```astro
 import MediaShelf from '@navfolio/mdx-components/MediaShelf.astro';
-
 <MediaShelf
   variant="inline"
   items={[

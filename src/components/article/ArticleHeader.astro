@@ -66,101 +66,36 @@ const wordCountLabel = ui.article.wordCount(wordCount);
     { 'article-header-archive': isArchiveHeader, 'archive-header-shared': isArchiveHeader },
   ]}
 >
-  {
-    isArchiveHeader ? (
-      <>
-        <div class="archive-heading archive-header-main">
-          <p class="archive-kicker">{kicker}</p>
-          <h1 class="archive-title" data-pagefind-meta="title">
-            {title}
-          </h1>
-          {showMetaLine && (
-            <div class="meta-line" aria-label={ui.article.metadata}>
-              {date && (
-                <MetadataItem kind="date" separated={false}>
-                  <FormattedDate date={date} />
-                </MetadataItem>
-              )}
-              <MetadataItem kind="words" separated={Boolean(date)}>
-                {wordCountLabel}
+  {isArchiveHeader ? (
+    <>
+      <div class="archive-heading archive-header-main">
+        <p class="archive-kicker">{kicker}</p>
+        <h1 class="archive-title" data-pagefind-meta="title">
+          {title}
+        </h1>
+        {showMetaLine && (
+          <div class="meta-line" aria-label={ui.article.metadata}>
+            {date && (
+              <MetadataItem kind="date" separated={false}>
+                <FormattedDate date={date} />
               </MetadataItem>
-              <MetadataItem kind="reading">{readingTime}</MetadataItem>
-              {showPageView && <PageView pathname={pathname} />}
-              {hasTags && (
-                <MetadataItem kind="tags" class="tag-list">
-                  {tagLinks.map((tag) => (
-                    <a class="tag" href={`${basePath}/tags/${tag.slug}/`}>
-                      #{tag.name}
-                    </a>
-                  ))}
-                </MetadataItem>
-              )}
-            </div>
-          )}
-          {hasGroups && (
-            <div class="group-meta-line" aria-label={ui.article.groups}>
-              {hasCategories && (
-                <span class="group-meta-item">
-                  <Icon name="folder" size={15} />
-                  <span class="group-label">{ui.groups.categories}</span>
-                  <span class="group-list">
-                    {categories.map((category) => (
-                      <a class="group-link" href={`${basePath}/blog/categories/${category.slug}/`}>
-                        {category.name}
-                      </a>
-                    ))}
-                  </span>
-                </span>
-              )}
-              {hasSeries && (
-                <span class="group-meta-item">
-                  <Icon name="layers" size={15} />
-                  <span class="group-label">{ui.groups.series}</span>
-                  <span class="group-list">
-                    {series.map((item) => (
-                      <a class="group-link" href={`${basePath}/blog/series/${item.slug}/`}>
-                        {item.name}
-                        {item.current && item.total ? ` ${item.current}/${item.total}` : ''}
-                      </a>
-                    ))}
-                  </span>
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-        {(description || note) && (
-          <div class="archive-copy">
-            {description && <p class="archive-subtitle">{description}</p>}
-            {note && <p class="archive-note">{note}</p>}
+            )}
+            <MetadataItem kind="words" separated={Boolean(date)}>
+              {wordCountLabel}
+            </MetadataItem>
+            <MetadataItem kind="reading">{readingTime}</MetadataItem>
+            {showPageView && <PageView pathname={pathname} />}
+            {hasTags && (
+              <MetadataItem kind="tags" class="tag-list">
+                {tagLinks.map((tag) => (
+                  <a class="tag" href={`${basePath}/tags/${tag.slug}/`}>
+                    #{tag.name}
+                  </a>
+                ))}
+              </MetadataItem>
+            )}
           </div>
         )}
-      </>
-    ) : (
-      <>
-        <h1 data-pagefind-meta="title">{title}</h1>
-
-        <div class="meta-line" aria-label={ui.article.metadata}>
-          {date && (
-            <MetadataItem kind="date" separated={false}>
-              <FormattedDate date={date} />
-            </MetadataItem>
-          )}
-          <MetadataItem kind="words" separated={Boolean(date)}>
-            {wordCountLabel}
-          </MetadataItem>
-          <MetadataItem kind="reading">{readingTime}</MetadataItem>
-          {showPageView && <PageView pathname={pathname} />}
-          {hasTags && (
-            <MetadataItem kind="tags" class="tag-list">
-              {tagLinks.map((tag) => (
-                <a class="tag" href={`${basePath}/tags/${tag.slug}/`}>
-                  #{tag.name}
-                </a>
-              ))}
-            </MetadataItem>
-          )}
-        </div>
         {hasGroups && (
           <div class="group-meta-line" aria-label={ui.article.groups}>
             {hasCategories && (
@@ -192,17 +127,78 @@ const wordCountLabel = ui.article.wordCount(wordCount);
             )}
           </div>
         )}
-      </>
-    )
-  }
+      </div>
+      {(description || note) && (
+        <div class="archive-copy">
+          {description && <p class="archive-subtitle">{description}</p>}
+          {note && <p class="archive-note">{note}</p>}
+        </div>
+      )}
+    </>
+  ) : (
+    <>
+      <h1 data-pagefind-meta="title">{title}</h1>
 
-  {
-    showHeroImage && heroImage && (
-      <figure class="article-hero-image">
-        <SmartImage width={1020} height={510} src={heroImage} alt="" />
-      </figure>
-    )
-  }
+      <div class="meta-line" aria-label={ui.article.metadata}>
+        {date && (
+          <MetadataItem kind="date" separated={false}>
+            <FormattedDate date={date} />
+          </MetadataItem>
+        )}
+        <MetadataItem kind="words" separated={Boolean(date)}>
+          {wordCountLabel}
+        </MetadataItem>
+        <MetadataItem kind="reading">{readingTime}</MetadataItem>
+        {showPageView && <PageView pathname={pathname} />}
+        {hasTags && (
+          <MetadataItem kind="tags" class="tag-list">
+            {tagLinks.map((tag) => (
+              <a class="tag" href={`${basePath}/tags/${tag.slug}/`}>
+                #{tag.name}
+              </a>
+            ))}
+          </MetadataItem>
+        )}
+      </div>
+      {hasGroups && (
+        <div class="group-meta-line" aria-label={ui.article.groups}>
+          {hasCategories && (
+            <span class="group-meta-item">
+              <Icon name="folder" size={15} />
+              <span class="group-label">{ui.groups.categories}</span>
+              <span class="group-list">
+                {categories.map((category) => (
+                  <a class="group-link" href={`${basePath}/blog/categories/${category.slug}/`}>
+                    {category.name}
+                  </a>
+                ))}
+              </span>
+            </span>
+          )}
+          {hasSeries && (
+            <span class="group-meta-item">
+              <Icon name="layers" size={15} />
+              <span class="group-label">{ui.groups.series}</span>
+              <span class="group-list">
+                {series.map((item) => (
+                  <a class="group-link" href={`${basePath}/blog/series/${item.slug}/`}>
+                    {item.name}
+                    {item.current && item.total ? ` ${item.current}/${item.total}` : ''}
+                  </a>
+                ))}
+              </span>
+            </span>
+          )}
+        </div>
+      )}
+    </>
+  )}
+
+  {showHeroImage && heroImage && (
+    <figure class="article-hero-image">
+      <SmartImage width={1020} height={510} src={heroImage} alt="" />
+    </figure>
+  )}
 </header>
 
 <style>

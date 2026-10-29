@@ -34,15 +34,6 @@ const friends: FriendItem[] = [
     rss: '',
     sticky: false,
   },
-  {
-    name: ' 葉は静かに落ちる',
-    url: 'http://101.133.232.20/',
-    bio: '有朋自远方来, 不亦说乎',
-    avatar: 'https://api.sin6626.me/api/v2/objects/avatar/Sin.jpg',
-    backgroundImage: '',
-    rss: '',
-    sticky: false,
-  },
 ];
 
 // 空态墙的占位卡数量：与 FriendLinkCard 桌面 4 列对齐
@@ -56,39 +47,39 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
   <main class="friends-shell" data-pagefind-body>
     <BlogArchiveHeader kicker="Friends & links" title="友链" subtitle="愿结四方客，共织一张网。" />
 
-    {
-      friends.length > 0 ? (
-        <div class="friends-wall-wrap">
-          <FriendLinkCard items={friends} />
+    {friends.length > 0 ? (
+      <div class="friends-wall-wrap">
+        <FriendLinkCard items={friends} />
+      </div>
+    ) : (
+      <div class="friends-empty">
+        {/* 空名片墙：镜像真实卡片的结构（8px 圆角、50px 圆头像位），虚线=待填空位 */}
+        <div class="friends-wall" aria-hidden="true">
+          {ghostSlots.map(() => (
+            <div class="ghost-slot">
+              <span class="ghost-avatar" />
+              <span class="ghost-lines">
+                <span class="ghost-line ghost-line--name" />
+                <span class="ghost-line ghost-line--bio" />
+              </span>
+            </div>
+          ))}
         </div>
-      ) : (
-        <div class="friends-empty">
-          {/* 空名片墙：镜像真实卡片的结构（8px 圆角、50px 圆头像位），虚线=待填空位 */}
-          <div class="friends-wall" aria-hidden="true">
-            {ghostSlots.map(() => (
-              <div class="ghost-slot">
-                <span class="ghost-avatar" />
-                <span class="ghost-lines">
-                  <span class="ghost-line ghost-line--name" />
-                  <span class="ghost-line ghost-line--bio" />
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-    }
+      </div>
+    )}
 
     <p class="friends-lead">
-      这面墙还空荡荡的。<br class="friends-lead__break" />如果你也写博客，欢迎<span
-        class="friends-lead__keep">交换</span
-      >友链
+      这面墙还空荡荡的。
+      <br class="friends-lead__break" />
+      如果你也写博客，欢迎<span class="friends-lead__keep">交换</span>友链
     </p>
 
     <section class="friends-apply" aria-labelledby="friends-apply-title">
       <div class="friends-apply__intro">
         <p class="friends-apply__kicker">Application</p>
-        <h2 class="friends-apply__title" id="friends-apply-title">一起做朋友吧</h2>
+        <h2 class="friends-apply__title" id="friends-apply-title">
+          一起做朋友吧
+        </h2>
         <ul class="friends-apply__rules">
           <li>
             站点可正常访问，保持更新、有原创内容；内容健康、无违法违规内容、无过多广告、恶意软件或恶意脚本；转载文章请注明出处。
@@ -111,7 +102,9 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
           </div>
           <div class="friends-apply__fact">
             <dt>链接</dt>
-            <dd><a href={site.url}>{site.url}</a></dd>
+            <dd>
+              <a href={site.url}>{site.url}</a>
+            </dd>
           </div>
           <div class="friends-apply__fact">
             <dt>简介</dt>
@@ -119,7 +112,11 @@ const pageDescription = `${site.title} 的友链页，收录朋友们的站点�
           </div>
           <div class="friends-apply__fact">
             <dt>头像</dt>
-            <dd><a href={profile.avatar} target="_blank" rel="noopener noreferrer">下载头像</a></dd>
+            <dd>
+              <a href={profile.avatar} target="_blank" rel="noopener noreferrer">
+                下载头像
+              </a>
+            </dd>
           </div>
         </dl>
         <button

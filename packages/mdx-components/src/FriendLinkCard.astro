@@ -37,79 +37,77 @@ const background = (index: number) => {
 
 <div class="friend-link-region">
   <div class="friend-link-list" style={`--friend-link-columns: ${columns};`}>
-    {
-      items.map((item, index) => {
-        const name = trim(item.name);
-        const avatar = trim(item.avatar);
-        const bio = trim(item.bio);
-        const explicitBackground = randomBackground ? '' : trim(item.backgroundImage);
-        const backgroundImage = explicitBackground || avatar;
-        const displayName = name || (preview ? '你的站点' : '');
-        const displayBio = bio || (preview ? '站点简介会显示在这里' : '');
-        return (
-          <a
-            class:list={[
-              'friend-link-card',
-              backgroundImage && 'friend-link-card--with-image',
-              randomBackground && 'friend-link-card--random',
-              preview && 'friend-link-card--preview',
-            ]}
-            href={preview ? undefined : trim(item.url)}
-            target={preview ? undefined : '_blank'}
-            rel={preview ? undefined : 'noopener noreferrer'}
-            title={displayName}
-            role={preview ? 'group' : undefined}
-            aria-label={preview ? `友链卡片实时预览：${displayName}` : undefined}
-            data-friend-link-card-preview={preview ? '' : undefined}
-            style={background(index)}
-          >
-            {backgroundImage || preview ? (
-              <img
-                class="friend-link-card__background"
-                src={backgroundImage || undefined}
-                alt=""
-                loading={preview ? 'eager' : 'lazy'}
-                decoding="async"
-                referrerpolicy="no-referrer"
-                aria-hidden="true"
-                hidden={!backgroundImage}
-                data-friend-link-background
-                data-friend-link-card-background={preview ? '' : undefined}
-              />
+    {items.map((item, index) => {
+      const name = trim(item.name);
+      const avatar = trim(item.avatar);
+      const bio = trim(item.bio);
+      const explicitBackground = randomBackground ? '' : trim(item.backgroundImage);
+      const backgroundImage = explicitBackground || avatar;
+      const displayName = name || (preview ? '你的站点' : '');
+      const displayBio = bio || (preview ? '站点简介会显示在这里' : '');
+      return (
+        <a
+          class:list={[
+            'friend-link-card',
+            backgroundImage && 'friend-link-card--with-image',
+            randomBackground && 'friend-link-card--random',
+            preview && 'friend-link-card--preview',
+          ]}
+          href={preview ? undefined : trim(item.url)}
+          target={preview ? undefined : '_blank'}
+          rel={preview ? undefined : 'noopener noreferrer'}
+          title={displayName}
+          role={preview ? 'group' : undefined}
+          aria-label={preview ? `友链卡片实时预览：${displayName}` : undefined}
+          data-friend-link-card-preview={preview ? '' : undefined}
+          style={background(index)}
+        >
+          {backgroundImage || preview ? (
+            <img
+              class="friend-link-card__background"
+              src={backgroundImage || undefined}
+              alt=""
+              loading={preview ? 'eager' : 'lazy'}
+              decoding="async"
+              referrerpolicy="no-referrer"
+              aria-hidden="true"
+              hidden={!backgroundImage}
+              data-friend-link-background
+              data-friend-link-card-background={preview ? '' : undefined}
+            />
+          ) : null}
+          <span class="friend-link-card__avatar" aria-hidden="true">
+            <img
+              src={avatar || undefined}
+              alt=""
+              loading={preview ? 'eager' : 'lazy'}
+              decoding="async"
+              referrerpolicy="no-referrer"
+              hidden={!avatar}
+              data-friend-link-avatar
+              data-friend-link-card-avatar={preview ? '' : undefined}
+            />
+            <span hidden={Boolean(avatar)} data-friend-link-avatar-fallback>
+              {(displayName[0] || name[0] || '?').toUpperCase()}
+            </span>
+          </span>
+          <span class="friend-link-card__meta">
+            <span class="friend-link-card__heading">
+              <strong data-friend-link-card-name={preview ? '' : undefined}>{displayName}</strong>
+              <Link size={13} strokeWidth={1.8} aria-hidden="true" />
+            </span>
+            {displayBio ? (
+              <span
+                class="friend-link-card__bio"
+                data-friend-link-card-bio={preview ? '' : undefined}
+              >
+                {displayBio}
+              </span>
             ) : null}
-            <span class="friend-link-card__avatar" aria-hidden="true">
-              <img
-                src={avatar || undefined}
-                alt=""
-                loading={preview ? 'eager' : 'lazy'}
-                decoding="async"
-                referrerpolicy="no-referrer"
-                hidden={!avatar}
-                data-friend-link-avatar
-                data-friend-link-card-avatar={preview ? '' : undefined}
-              />
-              <span hidden={Boolean(avatar)} data-friend-link-avatar-fallback>
-                {(displayName[0] || name[0] || '?').toUpperCase()}
-              </span>
-            </span>
-            <span class="friend-link-card__meta">
-              <span class="friend-link-card__heading">
-                <strong data-friend-link-card-name={preview ? '' : undefined}>{displayName}</strong>
-                <Link size={13} strokeWidth={1.8} aria-hidden="true" />
-              </span>
-              {displayBio ? (
-                <span
-                  class="friend-link-card__bio"
-                  data-friend-link-card-bio={preview ? '' : undefined}
-                >
-                  {displayBio}
-                </span>
-              ) : null}
-            </span>
-          </a>
-        );
-      })
-    }
+          </span>
+        </a>
+      );
+    })}
   </div>
 </div>
 

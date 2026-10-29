@@ -174,29 +174,27 @@ function getTagWeight(count: number) {
       />
       <GroupNav activeView="tags" />
 
-      {
-        tags.length > 0 ? (
-          <section class="tag-cloud" aria-label={pageTitle}>
-            {tags.map((tag, index) => {
-              const weight = getTagWeight(tag.count);
+      {tags.length > 0 ? (
+        <section class="tag-cloud" aria-label={pageTitle}>
+          {tags.map((tag, index) => {
+            const weight = getTagWeight(tag.count);
 
-              return (
-                <a
-                  href={`${basePath}/tags/${tag.slug}/`}
-                  style={`--tag-color: ${tagColors[index % tagColors.length]}; --tag-weight: ${weight.toFixed(
-                    3,
-                  )}; --tag-tilt: ${((index % 7) - 3) * 1.35}deg;`}
-                >
-                  <span>#{tag.name}</span>
-                  <small>{tag.count}</small>
-                </a>
-              );
-            })}
-          </section>
-        ) : (
-          <p class="empty-note">{ui.groups.emptyTags}</p>
-        )
-      }
+            return (
+              <a
+                href={`${basePath}/tags/${tag.slug}/`}
+                style={`--tag-color: ${tagColors[index % tagColors.length]}; --tag-weight: ${weight.toFixed(
+                  3,
+                )}; --tag-tilt: ${((index % 7) - 3) * 1.35}deg;`}
+              >
+                <span>#{tag.name}</span>
+                <small>{tag.count}</small>
+              </a>
+            );
+          })}
+        </section>
+      ) : (
+        <p class="empty-note">{ui.groups.emptyTags}</p>
+      )}
     </main>
     <Footer />
   </body>

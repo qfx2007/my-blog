@@ -18,9 +18,13 @@ function withBase(href: string) {
 
 <header>
   <nav>
-    <h2><a href={withBase('/')}>{site.title}</a></h2>
+    <h2>
+      <a href={withBase('/')}>{site.title}</a>
+    </h2>
     <div class="internal-links">
-      {links.map((link) => <HeaderLink href={link.href}>{link.label}</HeaderLink>)}
+      {links.map((link) => (
+        <HeaderLink href={link.href}>{link.label}</HeaderLink>
+      ))}
     </div>
     <div class="social-links">
       <a href={profile.website} target="_blank" rel="noreferrer">

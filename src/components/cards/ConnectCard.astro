@@ -6,7 +6,9 @@ const { links } = Astro.props as { links: ConnectLink[] };
 
 <article class="connect-card" data-connect-card>
   <div class="connect-list" aria-label="Connect links">
-    {links.map((item) => <ConnectIcon item={item} />)}
+    {links.map((item) => (
+      <ConnectIcon item={item} />
+    ))}
   </div>
 </article>
 

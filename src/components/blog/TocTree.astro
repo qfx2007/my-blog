@@ -15,57 +15,55 @@ const { items, level = 1, path = '', idPrefix = 'toc', navLink = false } = Astro
 ---
 
 <ol class:list={['toc-tree', { 'toc-tree-nested': level > 1 }]}>
-  {
-    items.map((item, index) => {
-      const normalizedHref = normalizeHash(item.href) || item.href;
-      const branchKey = path ? `${path}-${index + 1}` : `${index + 1}`;
-      const branchId = `${idPrefix}-${branchKey}-children`;
-      const hasChildren = item.children.length > 0;
+  {items.map((item, index) => {
+    const normalizedHref = normalizeHash(item.href) || item.href;
+    const branchKey = path ? `${path}-${index + 1}` : `${index + 1}`;
+    const branchId = `${idPrefix}-${branchKey}-children`;
+    const hasChildren = item.children.length > 0;
 
-      return (
-        <li
-          class:list={['toc-tree-item', { 'has-children': hasChildren }]}
-          data-toc-expanded={hasChildren ? 'false' : undefined}
-        >
-          <div class="toc-row">
-            {hasChildren ? (
-              <button
-                class="toc-branch-toggle"
-                type="button"
-                aria-label="Expand section"
-                aria-expanded="false"
-                aria-controls={branchId}
-                data-toc-toggle
-              >
-                <i aria-hidden="true" />
-              </button>
-            ) : (
-              <span class="toc-branch-spacer" aria-hidden="true" />
-            )}
-            <a
-              href={normalizedHref}
-              data-nav-toc-link={navLink ? '' : undefined}
-              data-toc-link
-              data-toc-hash={normalizedHref}
+    return (
+      <li
+        class:list={['toc-tree-item', { 'has-children': hasChildren }]}
+        data-toc-expanded={hasChildren ? 'false' : undefined}
+      >
+        <div class="toc-row">
+          {hasChildren ? (
+            <button
+              class="toc-branch-toggle"
+              type="button"
+              aria-label="Expand section"
+              aria-expanded="false"
+              aria-controls={branchId}
+              data-toc-toggle
             >
-              {item.label}
-            </a>
-          </div>
-          {hasChildren && (
-            <div class="toc-children" id={branchId} data-toc-branch>
-              <TocTree
-                items={item.children}
-                level={level + 1}
-                path={branchKey}
-                idPrefix={idPrefix}
-                navLink={navLink}
-              />
-            </div>
+              <i aria-hidden="true" />
+            </button>
+          ) : (
+            <span class="toc-branch-spacer" aria-hidden="true" />
           )}
-        </li>
-      );
-    })
-  }
+          <a
+            href={normalizedHref}
+            data-nav-toc-link={navLink ? '' : undefined}
+            data-toc-link
+            data-toc-hash={normalizedHref}
+          >
+            {item.label}
+          </a>
+        </div>
+        {hasChildren && (
+          <div class="toc-children" id={branchId} data-toc-branch>
+            <TocTree
+              items={item.children}
+              level={level + 1}
+              path={branchKey}
+              idPrefix={idPrefix}
+              navLink={navLink}
+            />
+          </div>
+        )}
+      </li>
+    );
+  })}
 </ol>
 
 <style is:global>

@@ -13,10 +13,8 @@ const { src, alt, widths, sizes, ...imageAttrs } = Astro.props;
 const shouldOptimize = typeof src !== 'string';
 ---
 
-{
-  shouldOptimize ? (
-    <Image src={src} alt={alt} widths={widths} sizes={sizes} {...imageAttrs} />
-  ) : (
-    <img src={src} alt={alt} sizes={sizes} {...imageAttrs} />
-  )
-}
+{shouldOptimize ? (
+  <Image src={src} alt={alt} widths={widths} sizes={sizes} {...imageAttrs} />
+) : (
+  <img src={src} alt={alt} sizes={sizes} {...imageAttrs} />
+)}

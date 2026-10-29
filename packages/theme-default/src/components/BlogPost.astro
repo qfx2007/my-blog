@@ -111,11 +111,15 @@ const { htmlLang, palette, title } = Astro.props;
       <article>
         <div class="prose">
           <div class="title">
-            <div class="date"><slot name="date" /></div>
+            <div class="date">
+              <slot name="date" />
+            </div>
             <h1>{title}</h1>
             <hr />
           </div>
-          <div class="hero-image"><slot name="hero-image" /></div>
+          <div class="hero-image">
+            <slot name="hero-image" />
+          </div>
           <slot />
         </div>
       </article>

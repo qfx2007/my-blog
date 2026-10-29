@@ -34,59 +34,57 @@ const ratingLabel = (rating: number | undefined) =>
   style={`--media-shelf-columns: ${columns};`}
   aria-label="Media shelf"
 >
-  {
-    items.map((item) => {
-      const destination = item.reviewHref ?? item.href;
-      const rating = ratingLabel(item.rating);
-      const content = (
-        <>
-          <figure
-            class="navfolio-media-shelf__cover"
-            data-media-type={item.type}
-            data-cover-aspect={item.coverAspect}
-          >
-            {coverSrc(item.cover) ? (
-              <img
-                src={coverSrc(item.cover)}
-                alt={`${item.title} cover`}
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              <span aria-hidden="true">{item.type}</span>
-            )}
-          </figure>
-          <div class="navfolio-media-shelf__content">
-            <strong>{item.title}</strong>
-            <span class="navfolio-media-shelf__meta">
-              <span class="navfolio-media-shelf__creator">{item.creator}</span>
-              {rating && <span class="navfolio-media-shelf__rating">{rating}</span>}
-            </span>
-            {item.reviewHref && item.reviewLabel ? (
-              <span class="navfolio-media-shelf__review">
-                <BookOpenText size={13} strokeWidth={1.8} aria-hidden="true" />
-                {item.reviewLabel}
-              </span>
-            ) : null}
-            {item.note ? <p>{item.note}</p> : null}
-          </div>
-        </>
-      );
-
-      return destination ? (
-        <a
-          class="navfolio-media-shelf__item"
-          href={destination}
-          target={item.reviewHref ? undefined : '_blank'}
-          rel={item.reviewHref ? undefined : 'noreferrer'}
+  {items.map((item) => {
+    const destination = item.reviewHref ?? item.href;
+    const rating = ratingLabel(item.rating);
+    const content = (
+      <>
+        <figure
+          class="navfolio-media-shelf__cover"
+          data-media-type={item.type}
+          data-cover-aspect={item.coverAspect}
         >
-          {content}
-        </a>
-      ) : (
-        <article class="navfolio-media-shelf__item">{content}</article>
-      );
-    })
-  }
+          {coverSrc(item.cover) ? (
+            <img
+              src={coverSrc(item.cover)}
+              alt={`${item.title} cover`}
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <span aria-hidden="true">{item.type}</span>
+          )}
+        </figure>
+        <div class="navfolio-media-shelf__content">
+          <strong>{item.title}</strong>
+          <span class="navfolio-media-shelf__meta">
+            <span class="navfolio-media-shelf__creator">{item.creator}</span>
+            {rating && <span class="navfolio-media-shelf__rating">{rating}</span>}
+          </span>
+          {item.reviewHref && item.reviewLabel ? (
+            <span class="navfolio-media-shelf__review">
+              <BookOpenText size={13} strokeWidth={1.8} aria-hidden="true" />
+              {item.reviewLabel}
+            </span>
+          ) : null}
+          {item.note ? <p>{item.note}</p> : null}
+        </div>
+      </>
+    );
+
+    return destination ? (
+      <a
+        class="navfolio-media-shelf__item"
+        href={destination}
+        target={item.reviewHref ? undefined : '_blank'}
+        rel={item.reviewHref ? undefined : 'noreferrer'}
+      >
+        {content}
+      </a>
+    ) : (
+      <article class="navfolio-media-shelf__item">{content}</article>
+    );
+  })}
 </section>
 
 <style>

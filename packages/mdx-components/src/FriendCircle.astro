@@ -95,46 +95,44 @@ const activeFriends = new Set(allPosts.map((post) => post.authorUrl || post.auth
     </button>
   </header>
   <div class="friend-circle__posts" data-friend-circle-posts>
-    {
-      initialPosts.map((post) => (
-        <article class="friend-circle__post">
-          <a
-            class="friend-circle__author-link"
-            href={post.authorUrl || post.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Visit ${post.author}`}
-          >
-            <span class="friend-circle__author-avatar">
-              {post.avatar ? (
-                <img src={post.avatar} alt="" loading="lazy" decoding="async" />
-              ) : (
-                <span>{(post.author[0] || '?').toUpperCase()}</span>
-              )}
-            </span>
-            <span class="friend-circle__author">{post.author}</span>
-          </a>
-          <a
-            class="friend-circle__post-title"
-            href={post.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {post.title}
-          </a>
-          <span class="friend-circle__post-meta">
-            {post.tags?.length ? (
-              <span class="friend-circle__tags">
-                {post.tags.slice(0, 3).map((tag) => (
-                  <span>{tag}</span>
-                ))}
-              </span>
-            ) : null}
-            {post.date ? <time datetime={post.date}>{post.date}</time> : null}
+    {initialPosts.map((post) => (
+      <article class="friend-circle__post">
+        <a
+          class="friend-circle__author-link"
+          href={post.authorUrl || post.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Visit ${post.author}`}
+        >
+          <span class="friend-circle__author-avatar">
+            {post.avatar ? (
+              <img src={post.avatar} alt="" loading="lazy" decoding="async" />
+            ) : (
+              <span>{(post.author[0] || '?').toUpperCase()}</span>
+            )}
           </span>
-        </article>
-      ))
-    }
+          <span class="friend-circle__author">{post.author}</span>
+        </a>
+        <a
+          class="friend-circle__post-title"
+          href={post.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {post.title}
+        </a>
+        <span class="friend-circle__post-meta">
+          {post.tags?.length ? (
+            <span class="friend-circle__tags">
+              {post.tags.slice(0, 3).map((tag) => (
+                <span>{tag}</span>
+              ))}
+            </span>
+          ) : null}
+          {post.date ? <time datetime={post.date}>{post.date}</time> : null}
+        </span>
+      </article>
+    ))}
   </div>
   <script
     is:inline

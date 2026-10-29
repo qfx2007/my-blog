@@ -70,50 +70,45 @@ function getPageHref(pageNumber: number) {
 <section>
   <BlogPostList posts={page.data} postOffset={postOffset} coverImageStyle={coverImageStyle} />
 </section>
-{
-  hasPagination && (
-    <nav class="archive-pagination" aria-label={ui.pagination.blog}>
-      <a
-        class:list={['pagination-link', { disabled: !page.url.prev }]}
-        href={page.url.prev ? withBase(page.url.prev) : undefined}
-        aria-disabled={!page.url.prev}
-      >
-        {ui.pagination.previous}
-      </a>
-      <div
-        class="pagination-pages"
-        aria-label={ui.pagination.page(page.currentPage, page.lastPage)}
-      >
-        {getPaginationItems(page.currentPage, page.lastPage).map((item) => {
-          if (item === 'ellipsis') {
-            return (
-              <span class="pagination-ellipsis" aria-hidden="true">
-                …
-              </span>
-            );
-          }
-
-          const pageNumber = item;
-          const isCurrent = pageNumber === page.currentPage;
-
+{hasPagination && (
+  <nav class="archive-pagination" aria-label={ui.pagination.blog}>
+    <a
+      class:list={['pagination-link', { disabled: !page.url.prev }]}
+      href={page.url.prev ? withBase(page.url.prev) : undefined}
+      aria-disabled={!page.url.prev}
+    >
+      {ui.pagination.previous}
+    </a>
+    <div class="pagination-pages" aria-label={ui.pagination.page(page.currentPage, page.lastPage)}>
+      {getPaginationItems(page.currentPage, page.lastPage).map((item) => {
+        if (item === 'ellipsis') {
           return (
-            <a
-              class:list={['pagination-number', { current: isCurrent }]}
-              href={withBase(getPageHref(pageNumber))}
-              aria-current={isCurrent ? 'page' : undefined}
-            >
-              {pageNumber}
-            </a>
+            <span class="pagination-ellipsis" aria-hidden="true">
+              …
+            </span>
           );
-        })}
-      </div>
-      <a
-        class:list={['pagination-link', { disabled: !page.url.next }]}
-        href={page.url.next ? withBase(page.url.next) : undefined}
-        aria-disabled={!page.url.next}
-      >
-        {ui.pagination.next}
-      </a>
-    </nav>
-  )
-}
+        }
+
+        const pageNumber = item;
+        const isCurrent = pageNumber === page.currentPage;
+
+        return (
+          <a
+            class:list={['pagination-number', { current: isCurrent }]}
+            href={withBase(getPageHref(pageNumber))}
+            aria-current={isCurrent ? 'page' : undefined}
+          >
+            {pageNumber}
+          </a>
+        );
+      })}
+    </div>
+    <a
+      class:list={['pagination-link', { disabled: !page.url.next }]}
+      href={page.url.next ? withBase(page.url.next) : undefined}
+      aria-disabled={!page.url.next}
+    >
+      {ui.pagination.next}
+    </a>
+  </nav>
+)}

@@ -44,37 +44,33 @@ function getCategoryName(name: string, slug: string) {
         <span>{ui.groups.allArticles}</span>
         <b>{posts.length}</b>
       </a>
-      {
-        categories.map((category) => (
-          <a
-            class:list={[
-              'topic-chip',
-              activeView === 'posts' && activeCategory === category.slug && 'is-active',
-            ]}
-            href={withBase(`/blog/categories/${category.slug}/`)}
-          >
-            <span>{getCategoryName(category.name, category.slug)}</span>
-            <b>{category.count}</b>
-          </a>
-        ))
-      }
-    </div>
-    {
-      categories.length > 0 && (
-        <button
-          class="topic-toggle"
-          type="button"
-          hidden
-          data-topic-toggle
-          data-expand-label={ui.groups.expand}
-          data-collapse-label={ui.groups.collapse}
-          aria-expanded="false"
+      {categories.map((category) => (
+        <a
+          class:list={[
+            'topic-chip',
+            activeView === 'posts' && activeCategory === category.slug && 'is-active',
+          ]}
+          href={withBase(`/blog/categories/${category.slug}/`)}
         >
-          <span data-topic-toggle-label>{ui.groups.expand}</span>
-          <Icon name="chevron-down" size={15} class="topic-toggle-icon" />
-        </button>
-      )
-    }
+          <span>{getCategoryName(category.name, category.slug)}</span>
+          <b>{category.count}</b>
+        </a>
+      ))}
+    </div>
+    {categories.length > 0 && (
+      <button
+        class="topic-toggle"
+        type="button"
+        hidden
+        data-topic-toggle
+        data-expand-label={ui.groups.expand}
+        data-collapse-label={ui.groups.collapse}
+        aria-expanded="false"
+      >
+        <span data-topic-toggle-label>{ui.groups.expand}</span>
+        <Icon name="chevron-down" size={15} class="topic-toggle-icon" />
+      </button>
+    )}
   </div>
 
   <div class="group-links" aria-label="Blog views">

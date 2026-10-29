@@ -81,23 +81,21 @@ const shouldShowTocAction = showTocIcon && tocItems.length > 0;
   </a>
 
   <nav class="nav-links" aria-label="Article navigation">
-    {
-      links.map((link) =>
-        link.disabled ? (
-          <span
-            class="nav-link nav-link-placeholder"
-            aria-disabled="true"
-            title="Projects content placeholder"
-          >
-            {link.label}
-          </span>
-        ) : (
-          <a class:list={['nav-link', { active: isActive(link.href) }]} href={withBase(link.href)}>
-            {link.label}
-          </a>
-        ),
-      )
-    }
+    {links.map((link) =>
+      link.disabled ? (
+        <span
+          class="nav-link nav-link-placeholder"
+          aria-disabled="true"
+          title="Projects content placeholder"
+        >
+          {link.label}
+        </span>
+      ) : (
+        <a class:list={['nav-link', { active: isActive(link.href) }]} href={withBase(link.href)}>
+          {link.label}
+        </a>
+      ),
+    )}
   </nav>
 
   <nav
@@ -106,23 +104,21 @@ const shouldShowTocAction = showTocIcon && tocItems.length > 0;
     aria-label="Mobile navigation"
     data-mobile-menu
   >
-    {
-      links.map((link) =>
-        link.disabled ? (
-          <span class="mobile-menu-link mobile-menu-placeholder" aria-disabled="true">
-            {link.label}
-          </span>
-        ) : (
-          <a
-            class:list={['mobile-menu-link', { active: isActive(link.href) }]}
-            href={withBase(link.href)}
-            data-mobile-menu-link
-          >
-            {link.label}
-          </a>
-        ),
-      )
-    }
+    {links.map((link) =>
+      link.disabled ? (
+        <span class="mobile-menu-link mobile-menu-placeholder" aria-disabled="true">
+          {link.label}
+        </span>
+      ) : (
+        <a
+          class:list={['mobile-menu-link', { active: isActive(link.href) }]}
+          href={withBase(link.href)}
+          data-mobile-menu-link
+        >
+          {link.label}
+        </a>
+      ),
+    )}
   </nav>
 
   <div class="nav-actions" aria-label="Page actions">
@@ -132,38 +128,34 @@ const shouldShowTocAction = showTocIcon && tocItems.length > 0;
       <Sun class="theme-icon-sun" size={17} stroke-width={2} />
     </button>
     {search.enabled && <SiteSearch search={search} />}
-    {
-      shouldShowTocAction && (
-        <button
-          class="toc-action"
-          type="button"
-          aria-label={ui.toc.open}
-          aria-expanded="false"
-          aria-controls="mobile-toc-menu"
-          title={ui.toc.title}
-          data-mobile-toc-trigger
-        >
-          <ListTree size={17} stroke-width={2} />
-        </button>
-      )
-    }
+    {shouldShowTocAction && (
+      <button
+        class="toc-action"
+        type="button"
+        aria-label={ui.toc.open}
+        aria-expanded="false"
+        aria-controls="mobile-toc-menu"
+        title={ui.toc.title}
+        data-mobile-toc-trigger
+      >
+        <ListTree size={17} stroke-width={2} />
+      </button>
+    )}
   </div>
 
-  {
-    shouldShowTocAction && (
-      <nav
-        class="mobile-toc-panel"
-        id="mobile-toc-menu"
-        aria-label={ui.toc.title}
-        data-nav-toc-menu
-        data-toc-root
-        data-toc-scroll
-      >
-        <p>{ui.toc.title}</p>
-        <TocTree items={tocItems} idPrefix="nav-toc" navLink />
-      </nav>
-    )
-  }
+  {shouldShowTocAction && (
+    <nav
+      class="mobile-toc-panel"
+      id="mobile-toc-menu"
+      aria-label={ui.toc.title}
+      data-nav-toc-menu
+      data-toc-root
+      data-toc-scroll
+    >
+      <p>{ui.toc.title}</p>
+      <TocTree items={tocItems} idPrefix="nav-toc" navLink />
+    </nav>
+  )}
 </header>
 
 <script>

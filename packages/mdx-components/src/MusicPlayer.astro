@@ -131,132 +131,121 @@ const playlistPayload = JSON.stringify(playlist).replace(/</g, '\\u003c');
   data-navfolio-music-player
 >
   <div class="navfolio-music-player__body">
-    {
-      resolvedArtwork ? (
-        <img
-          class="navfolio-music-player__artwork"
-          src={resolvedArtwork}
-          alt={`《${resolvedTitle}》封面`}
-          loading="lazy"
-          decoding="async"
-          data-artwork
-        />
-      ) : (
-        <div
-          class="navfolio-music-player__artwork navfolio-music-player__artwork--placeholder"
-          aria-hidden="true"
-        >
-          <span>♫</span>
-        </div>
-      )
-    }
+    {resolvedArtwork ? (
+      <img
+        class="navfolio-music-player__artwork"
+        src={resolvedArtwork}
+        alt={`《${resolvedTitle}》封面`}
+        loading="lazy"
+        decoding="async"
+        data-artwork
+      />
+    ) : (
+      <div
+        class="navfolio-music-player__artwork navfolio-music-player__artwork--placeholder"
+        aria-hidden="true"
+      >
+        <span>♫</span>
+      </div>
+    )}
     <div class="navfolio-music-player__content">
       <div class="navfolio-music-player__meta">
-        <strong data-title data-marquee><span>{resolvedTitle}</span></strong>{
-          resolvedArtist ? (
-            <span data-artist data-marquee>
-              <span>{resolvedArtist}</span>
-            </span>
-          ) : null
-        }
+        <strong data-title data-marquee>
+          <span>{resolvedTitle}</span>
+        </strong>
+        {resolvedArtist ? (
+          <span data-artist data-marquee>
+            <span>{resolvedArtist}</span>
+          </span>
+        ) : null}
       </div>
-      {
-        isNative ? (
-          <div class="navfolio-music-player__controls">
-            <button
-              type="button"
-              class="navfolio-music-player__play"
-              aria-label={`播放 ${resolvedTitle}`}
-              data-play
-            >
-              <>
-                <Play size={16} data-play-icon />
-                <Pause size={16} data-pause-icon />
-              </>
-            </button>
-            <input
-              class="navfolio-music-player__progress"
-              type="range"
-              min="0"
-              max="0"
-              value="0"
-              aria-label={`${resolvedTitle} 播放进度`}
-              data-progress
-            />
-            <span class="navfolio-music-player__time" aria-live="off" data-time>
-              0:00
-            </span>
-            <button type="button" class="navfolio-music-player__mute" aria-label="静音" data-mute>
-              <>
-                <Volume2 size={16} data-volume-icon />
-                <VolumeX size={16} data-muted-icon />
-              </>
-            </button>
-            <audio preload="metadata" data-audio>
-              {directSources.map((source) => (
-                <source src={source.src} type={source.type} />
-              ))}
-              你的浏览器不支持音频播放。
-            </audio>
-          </div>
-        ) : embed ? (
-          <div class="navfolio-music-player__provider">
-            <span>{providerName} 官方播放器</span>
-            {url ? (
-              <a href={url} target="_blank" rel="noreferrer">
-                前往平台 <ExternalLink size={14} />
-              </a>
-            ) : null}
-          </div>
-        ) : (
-          <p class="navfolio-music-player__unavailable">未能生成可用的官方播放器地址。</p>
-        )
-      }
+      {isNative ? (
+        <div class="navfolio-music-player__controls">
+          <button
+            type="button"
+            class="navfolio-music-player__play"
+            aria-label={`播放 ${resolvedTitle}`}
+            data-play
+          >
+            <>
+              <Play size={16} data-play-icon />
+              <Pause size={16} data-pause-icon />
+            </>
+          </button>
+          <input
+            class="navfolio-music-player__progress"
+            type="range"
+            min="0"
+            max="0"
+            value="0"
+            aria-label={`${resolvedTitle} 播放进度`}
+            data-progress
+          />
+          <span class="navfolio-music-player__time" aria-live="off" data-time>
+            0:00
+          </span>
+          <button type="button" class="navfolio-music-player__mute" aria-label="静音" data-mute>
+            <>
+              <Volume2 size={16} data-volume-icon />
+              <VolumeX size={16} data-muted-icon />
+            </>
+          </button>
+          <audio preload="metadata" data-audio>
+            {directSources.map((source) => (
+              <source src={source.src} type={source.type} />
+            ))}
+            你的浏览器不支持音频播放。
+          </audio>
+        </div>
+      ) : embed ? (
+        <div class="navfolio-music-player__provider">
+          <span>{providerName} 官方播放器</span>
+          {url ? (
+            <a href={url} target="_blank" rel="noreferrer">
+              前往平台 <ExternalLink size={14} />
+            </a>
+          ) : null}
+        </div>
+      ) : (
+        <p class="navfolio-music-player__unavailable">未能生成可用的官方播放器地址。</p>
+      )}
     </div>
   </div>
-  {
-    embed ? (
-      <iframe
-        class="navfolio-music-player__embed"
-        src={embed}
-        title={`${title} — ${providerName} 播放器`}
-        loading="lazy"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        referrerpolicy="strict-origin-when-cross-origin"
-      />
-    ) : null
-  }
-  {
-    playlist.length > 0 && isNative ? (
-      <details class="navfolio-music-player__playlist">
-        <>
-          <summary>
-            <ListMusic size={14} /> 歌单 · {playlist.length}
-          </summary>
-          <div>
-            {playlist.map((track, index) => (
-              <button type="button" data-track-index={index}>
-                <span>{track.title}</span>
-                {track.artist ? <small>{track.artist}</small> : null}
-              </button>
-            ))}
-          </div>
-        </>
-      </details>
-    ) : null
-  }
-  {
-    playlist.length > 0 ? (
-      <script is:inline type="application/json" data-playlist set:html={playlistPayload} />
-    ) : null
-  }
-  {
-    resolvedCaption ? (
-      <figcaption data-caption data-marquee>
-        <span>{resolvedCaption}</span>
-      </figcaption>
-    ) : null
-  }
+  {embed ? (
+    <iframe
+      class="navfolio-music-player__embed"
+      src={embed}
+      title={`${title} — ${providerName} 播放器`}
+      loading="lazy"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      referrerpolicy="strict-origin-when-cross-origin"
+    />
+  ) : null}
+  {playlist.length > 0 && isNative ? (
+    <details class="navfolio-music-player__playlist">
+      <>
+        <summary>
+          <ListMusic size={14} /> 歌单 · {playlist.length}
+        </summary>
+        <div>
+          {playlist.map((track, index) => (
+            <button type="button" data-track-index={index}>
+              <span>{track.title}</span>
+              {track.artist ? <small>{track.artist}</small> : null}
+            </button>
+          ))}
+        </div>
+      </>
+    </details>
+  ) : null}
+  {playlist.length > 0 ? (
+    <script is:inline type="application/json" data-playlist set:html={playlistPayload} />
+  ) : null}
+  {resolvedCaption ? (
+    <figcaption data-caption data-marquee>
+      <span>{resolvedCaption}</span>
+    </figcaption>
+  ) : null}
 </figure>
 
 <script>

@@ -78,41 +78,39 @@ const kindIconMap = {
 ---
 
 <article class="glass-card doing-card">
-  <h2><Icon name="calendar" /> {ui.doing.recently}</h2>
+  <h2>
+    <Icon name="calendar" /> {ui.doing.recently}
+  </h2>
   <ul class="activity-feed" aria-label={ui.doing.recently}>
-    {
-      items.map((item) => (
-        <li class="activity-item">
-          <span class="activity-badge pinned" aria-hidden="true">
-            📌
-          </span>
-          <span class="activity-text">{item.text}</span>
-          <strong class="activity-mark" aria-hidden="true">
-            {item.mark}
-          </strong>
-        </li>
-      ))
-    }
-    {
-      visibleEvents.map((event) => {
-        const EventIcon = kindIconMap[event.kind];
+    {items.map((item) => (
+      <li class="activity-item">
+        <span class="activity-badge pinned" aria-hidden="true">
+          📌
+        </span>
+        <span class="activity-text">{item.text}</span>
+        <strong class="activity-mark" aria-hidden="true">
+          {item.mark}
+        </strong>
+      </li>
+    ))}
+    {visibleEvents.map((event) => {
+      const EventIcon = kindIconMap[event.kind];
 
-        return (
-          <li class="activity-item">
-            <span class="activity-badge">
-              <EventIcon size={12} strokeWidth={1.9} aria-hidden="true" />
-            </span>
-            <span class="activity-text">
-              {ui.doing.published}
-              <a href={event.href}>{event.title}</a>
-            </span>
-            <time class="activity-date" datetime={event.date.toISOString()}>
-              {formatDate.format(event.date)}
-            </time>
-          </li>
-        );
-      })
-    }
+      return (
+        <li class="activity-item">
+          <span class="activity-badge">
+            <EventIcon size={12} strokeWidth={1.9} aria-hidden="true" />
+          </span>
+          <span class="activity-text">
+            {ui.doing.published}
+            <a href={event.href}>{event.title}</a>
+          </span>
+          <time class="activity-date" datetime={event.date.toISOString()}>
+            {formatDate.format(event.date)}
+          </time>
+        </li>
+      );
+    })}
   </ul>
 </article>
 

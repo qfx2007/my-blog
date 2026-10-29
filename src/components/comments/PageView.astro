@@ -13,16 +13,14 @@ const comments = resolveCommentsConfig(rawComments);
 const showPageView = shouldRenderWalinePageView(comments);
 ---
 
-{
-  showPageView && (
-    <MetadataItem kind="default" class="page-view">
-      Pageviews{' '}
-      <span class="waline-pageview-count" data-path={pathname} aria-live="polite">
-        --
-      </span>
-    </MetadataItem>
-  )
-}
+{showPageView && (
+  <MetadataItem kind="default" class="page-view">
+    Pageviews{' '}
+    <span class="waline-pageview-count" data-path={pathname} aria-live="polite">
+      --
+    </span>
+  </MetadataItem>
+)}
 
 <script
   type="module"

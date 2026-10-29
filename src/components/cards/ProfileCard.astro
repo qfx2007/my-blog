@@ -26,7 +26,9 @@ const { profile } = Astro.props as { profile: Profile };
 
   <div class="profile-heading">
     <h1>{profile.name}</h1>
-    <span><Icon name="sparkle" /> {profile.role}</span>
+    <span>
+      <Icon name="sparkle" /> {profile.role}
+    </span>
   </div>
 </article>
 

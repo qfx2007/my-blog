@@ -106,164 +106,157 @@ function withBase(href: string) {
 >
   <Content />
 
-  {
-    relatedProjects.length > 0 ? (
-      <section
-        class="project-stream"
-        aria-label={i18n.t('projects.listLabel')}
-        style={`--project-flight-icon: url("${flightIconUrl}");`}
-      >
-        <svg class="project-thread" aria-hidden="true">
-          <defs>
-            <linearGradient id="project-pencil-fade" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
-              <stop offset="16%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
-              <stop offset="84%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
-              <stop offset="100%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
-            </linearGradient>
-            <filter id="project-pencil-texture" x="-12%" y="-12%" width="124%" height="124%">
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency="0.9"
-                numOctaves="2"
-                seed="8"
-                result="grain"
-              />
-              <feDisplacementMap in="SourceGraphic" in2="grain" scale="0.65" />
-            </filter>
-          </defs>
-          <path class="project-thread-path" data-project-thread-path />
-          <path class="project-thread-grain" data-project-thread-grain />
-        </svg>
-        {relatedProjects.map(({ project, galleryImages, imageLayout }, index) => {
-          const projectIcon = project.data.icon;
-          // 图片图标（以 / 开头或带图片扩展名）走 <img>，内置名照旧查 lucide 表
-          const isImageIcon =
-            projectIcon.startsWith('/') || /\.(svg|png|webp|jpe?g|avif)$/i.test(projectIcon);
-          const ProjectIcon = projectIcons[projectIcon] ?? Github;
-          const projectHref = withBase(`${projectsRoute}/${project.id}/`);
-          const align = index % 2 === 0 ? 'left' : 'right';
+  {relatedProjects.length > 0 ? (
+    <section
+      class="project-stream"
+      aria-label={i18n.t('projects.listLabel')}
+      style={`--project-flight-icon: url("${flightIconUrl}");`}
+    >
+      <svg class="project-thread" aria-hidden="true">
+        <defs>
+          <linearGradient id="project-pencil-fade" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
+            <stop offset="16%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
+            <stop offset="84%" stop-color="var(--paper-ink-faint)" stop-opacity="0.52" />
+            <stop offset="100%" stop-color="var(--paper-ink-faint)" stop-opacity="0" />
+          </linearGradient>
+          <filter id="project-pencil-texture" x="-12%" y="-12%" width="124%" height="124%">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.9"
+              numOctaves="2"
+              seed="8"
+              result="grain"
+            />
+            <feDisplacementMap in="SourceGraphic" in2="grain" scale="0.65" />
+          </filter>
+        </defs>
+        <path class="project-thread-path" data-project-thread-path />
+        <path class="project-thread-grain" data-project-thread-grain />
+      </svg>
+      {relatedProjects.map(({ project, galleryImages, imageLayout }, index) => {
+        const projectIcon = project.data.icon;
+        // 图片图标（以 / 开头或带图片扩展名）走 <img>，内置名照旧查 lucide 表
+        const isImageIcon =
+          projectIcon.startsWith('/') || /\.(svg|png|webp|jpe?g|avif)$/i.test(projectIcon);
+        const ProjectIcon = projectIcons[projectIcon] ?? Github;
+        const projectHref = withBase(`${projectsRoute}/${project.id}/`);
+        const align = index % 2 === 0 ? 'left' : 'right';
 
-          return (
-            <article
-              class:list={['project-card', align]}
-              style={`--project-index: ${index}${
-                project.data.iconColor ? `; --project-icon-color: ${project.data.iconColor}` : ''
-              }`}
-              data-project-item
-              data-project-index={index}
-            >
-              <span class="project-dot" data-project-dot aria-hidden="true" />
-              <div class="project-card-heading">
-                {isImageIcon ? (
-                  <img
-                    class="project-icon project-icon-image"
-                    src={withBase(projectIcon)}
-                    alt=""
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <ProjectIcon
-                    class="project-icon"
-                    size={22}
-                    strokeWidth={1.55}
-                    aria-hidden="true"
-                  />
-                )}
-                <h2>
-                  <a href={projectHref}>{project.data.title}</a>
-                </h2>
-              </div>
-              {galleryImages.length > 0 && (
-                <div
-                  class:list={['project-images', imageLayout.isCollapsible && 'is-collapsible']}
-                  style={`--project-image-columns: ${imageLayout.columns};`}
-                  data-project-image-group
-                  data-project-image-count={imageLayout.count}
-                  data-project-image-columns={imageLayout.columns}
-                  aria-label={i18n.t('projects.listLabel')}
-                >
-                  {galleryImages.map((image, imageIndex) => (
-                    <figure
-                      class:list={[
-                        'project-image',
-                        imageLayout.isCollapsible &&
-                          imageIndex >= imageLayout.visibleCount &&
-                          'is-extra',
-                      ]}
-                    >
-                      <Image
-                        src={image}
-                        alt=""
-                        widths={[360, 520, 720]}
-                        sizes="(max-width: 720px) 100vw, 420px"
-                      />
-                    </figure>
-                  ))}
-                  {imageLayout.isCollapsible && (
-                    <button
-                      class="project-image-toggle"
-                      type="button"
-                      aria-expanded="false"
-                      data-project-image-toggle
-                      data-expand-label={`展开 ${imageLayout.hiddenCount} 张`}
-                      data-collapse-label="收起图片"
-                    >
-                      展开 {imageLayout.hiddenCount} 张
-                    </button>
-                  )}
-                </div>
+        return (
+          <article
+            class:list={['project-card', align]}
+            style={`--project-index: ${index}${
+              project.data.iconColor ? `; --project-icon-color: ${project.data.iconColor}` : ''
+            }`}
+            data-project-item
+            data-project-index={index}
+          >
+            <span class="project-dot" data-project-dot aria-hidden="true" />
+            <div class="project-card-heading">
+              {isImageIcon ? (
+                <img
+                  class="project-icon project-icon-image"
+                  src={withBase(projectIcon)}
+                  alt=""
+                  aria-hidden="true"
+                />
+              ) : (
+                <ProjectIcon class="project-icon" size={22} strokeWidth={1.55} aria-hidden="true" />
               )}
-              <p>{project.data.description}</p>
-              <footer class="project-card-footer">
-                <span class="project-meta">
-                  <FormattedDate date={project.data.date} />
+              <h2>
+                <a href={projectHref}>{project.data.title}</a>
+              </h2>
+            </div>
+            {galleryImages.length > 0 && (
+              <div
+                class:list={['project-images', imageLayout.isCollapsible && 'is-collapsible']}
+                style={`--project-image-columns: ${imageLayout.columns};`}
+                data-project-image-group
+                data-project-image-count={imageLayout.count}
+                data-project-image-columns={imageLayout.columns}
+                aria-label={i18n.t('projects.listLabel')}
+              >
+                {galleryImages.map((image, imageIndex) => (
+                  <figure
+                    class:list={[
+                      'project-image',
+                      imageLayout.isCollapsible &&
+                        imageIndex >= imageLayout.visibleCount &&
+                        'is-extra',
+                    ]}
+                  >
+                    <Image
+                      src={image}
+                      alt=""
+                      widths={[360, 520, 720]}
+                      sizes="(max-width: 720px) 100vw, 420px"
+                    />
+                  </figure>
+                ))}
+                {imageLayout.isCollapsible && (
+                  <button
+                    class="project-image-toggle"
+                    type="button"
+                    aria-expanded="false"
+                    data-project-image-toggle
+                    data-expand-label={`展开 ${imageLayout.hiddenCount} 张`}
+                    data-collapse-label="收起图片"
+                  >
+                    展开 {imageLayout.hiddenCount} 张
+                  </button>
+                )}
+              </div>
+            )}
+            <p>{project.data.description}</p>
+            <footer class="project-card-footer">
+              <span class="project-meta">
+                <FormattedDate date={project.data.date} />
+              </span>
+              {project.data.authors.length > 0 && (
+                <span class="project-authors" aria-label={i18n.t('projects.authorsLabel')}>
+                  {project.data.authors.map((author) =>
+                    author.url ? (
+                      <a href={author.url}>{author.name}</a>
+                    ) : (
+                      <span>{author.name}</span>
+                    ),
+                  )}
                 </span>
-                {project.data.authors.length > 0 && (
-                  <span class="project-authors" aria-label={i18n.t('projects.authorsLabel')}>
-                    {project.data.authors.map((author) =>
-                      author.url ? (
-                        <a href={author.url}>{author.name}</a>
+              )}
+              {project.data.links.length > 0 && (
+                <span class="project-links" aria-label={i18n.t('projects.linksLabel')}>
+                  {project.data.links.map((link) => (
+                    <a href={link.href} target="_blank" rel="noopener noreferrer">
+                      {link.kind === 'github' ? (
+                        <Github size={13} strokeWidth={1.8} aria-hidden="true" />
                       ) : (
-                        <span>{author.name}</span>
-                      ),
-                    )}
-                  </span>
-                )}
-                {project.data.links.length > 0 && (
-                  <span class="project-links" aria-label={i18n.t('projects.linksLabel')}>
-                    {project.data.links.map((link) => (
-                      <a href={link.href} target="_blank" rel="noopener noreferrer">
-                        {link.kind === 'github' ? (
-                          <Github size={13} strokeWidth={1.8} aria-hidden="true" />
-                        ) : (
-                          <ExternalLink size={13} strokeWidth={1.8} aria-hidden="true" />
-                        )}
-                        {link.label}
-                      </a>
-                    ))}
-                  </span>
-                )}
-                {project.data.tags.length > 0 && (
-                  <span class="project-tags" aria-label={i18n.t('projects.tagsLabel')}>
-                    {project.data.tags.slice(0, 3).map((tag) => (
-                      <small>{tag}</small>
-                    ))}
-                  </span>
-                )}
-              </footer>
-            </article>
-          );
-        })}
-      </section>
-    ) : (
-      <section class="project-empty" aria-label={i18n.t('projects.emptyLabel')}>
-        <span aria-hidden="true">01</span>
-        <h2>{i18n.t('projects.emptyTitle')}</h2>
-        <p>{i18n.t('projects.emptyNote')}</p>
-      </section>
-    )
-  }
+                        <ExternalLink size={13} strokeWidth={1.8} aria-hidden="true" />
+                      )}
+                      {link.label}
+                    </a>
+                  ))}
+                </span>
+              )}
+              {project.data.tags.length > 0 && (
+                <span class="project-tags" aria-label={i18n.t('projects.tagsLabel')}>
+                  {project.data.tags.slice(0, 3).map((tag) => (
+                    <small>{tag}</small>
+                  ))}
+                </span>
+              )}
+            </footer>
+          </article>
+        );
+      })}
+    </section>
+  ) : (
+    <section class="project-empty" aria-label={i18n.t('projects.emptyLabel')}>
+      <span aria-hidden="true">01</span>
+      <h2>{i18n.t('projects.emptyTitle')}</h2>
+      <p>{i18n.t('projects.emptyNote')}</p>
+    </section>
+  )}
 </BlogArticle>
 
 <script>
