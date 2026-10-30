@@ -53,8 +53,8 @@
   },
   "devDependencies": {
     "@astrojs/compiler": "^4.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.72.0",
-    "@typescript-eslint/parser": "^8.72.0",
+    "@typescript-eslint/eslint-plugin": "^8.72.1",
+    "@typescript-eslint/parser": "^8.72.1",
     "@typescript/native": "npm:typescript@^7.0.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
