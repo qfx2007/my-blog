@@ -1,0 +1,151 @@
+---
+title: '让机器人替我管依赖：Dependabot 自动升级实践与思考'
+description: 'Dependabot 是 GitHub 平台内置的依赖管理服务。本文记录本站如何通过上游模板预置的配置启用它，以及这套机制背后的原理、好处与规范化价值。'
+date: '2026-10-30'
+draft: false
+tags:
+  - 依赖管理
+  - 工程化规范化
+  - GitHub
+categories:
+  - 技术笔记
+series:
+  - 方法与工具
+comments: true
+sidebar:
+  enable: true
+  toc: true
+  relatedPosts: true
+---
+
+依赖更新这件事，手动做很容易拖延——每个包都要自己查有没有新版本、有没有安全漏洞，几十个依赖根本盯不过来。但如果你仔细翻过 GitHub 的仓库设置，会发现有一个叫 **Dependabot** 的东西，它是 GitHub 平台自带的、不需要额外付费就能用的依赖管理服务。
+
+这篇文章记录了我发现并使用它的过程：从“这啥？”到“真香”，再到把它当成工程规范的一部分。
+
+## 一、它到底是什么
+
+---
+
+先说一个容易误解的点。当时我发现远程仓库上突然多出来一个不认识的分支，名字类似 `dependabot/bun/production-dependencies-xxx`，但我自己并没有创建过它。一开始我以为这是我项目当中使用过的一个开源项目 [astro-navfolio](https://github.com/dodolalorc/astro-navfolio) 的作者专门写了什么自动脚本，后来查了 GitHub 官方文档才搞清楚：
+
+**Dependabot 是 GitHub 平台内置的依赖管理服务，适用于 GitHub 上的所有仓库。** 你不需要在项目里写任何执行代码，只要仓库里存在 `.github/dependabot.yml` 这个配置文件，GitHub 服务器就会在后台按配置定期扫描依赖、自动创建 PR。
+
+项目里这份配置的作用，相当于给 GitHub 的引擎写了一张“说明书”。只要这份文件存在于仓库中，引擎就会按它写的规则在这个仓库里干活。
+
+这个区分很重要：**能力来自 GitHub，配置只是项目里的一份文件。** 换成任何其他 GitHub 仓库，放上同样的文件，效果完全一样。
+
+## 二、以本站项目为例：这张“说明书”写了什么
+
+---
+
+我目前的配置是这样：
+
+```yaml
+version: 2
+updates:
+  - package-ecosystem: 'bun'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      production-dependencies:
+        applies-to: 'version-updates'
+        patterns:
+          - '*'
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      ci-dependencies:
+        applies-to: 'version-updates'
+        patterns:
+          - '*'
+```
+
+几个关键参数的含义：
+
+**`package-ecosystem: 'bun'`** 告诉 Dependabot 去扫描 `package.json` 和 `bun.lock`。GitHub 官方文档确认 Bun 是受支持的生态之一，需要 Bun >= v1.1.39。如果你的项目用 npm 或 pnpm，这里对应改成 `'npm'` 或 `'pnpm'` 即可。
+
+**`schedule.interval: 'weekly'`** 是检查频率。可选值包括 `daily`、`weekly`、`monthly`，甚至 cron。每周一次对我来说刚好：PR 不会多到烦人，也不会漏掉重要的安全更新。
+
+**`groups`** 是真正让 PR 数量变得可管理的配置。默认情况下，Dependabot 会为每个依赖单独开一个 PR。几十个依赖同时更新，PR 列表会瞬间被淹没。`groups` 把匹配 `patterns: ['*']` 的所有生产依赖打包成一个 PR，你只需要 review 一次、合并一次。
+
+实际收到的 PR 标题长这样：
+
+```text
+Bump the production-dependencies group across 1 directory with 13 updates
+```
+
+点开是一张表格，列出每个包从哪个版本升到哪个版本，附带的 release notes 和 changelog 链接也自动整理好了。不需要自己去 npm 或 GitHub 上逐个翻。
+
+## 三、它为什么算“规范”：对照几个标准
+
+---
+
+说它“规范”，不是随口一说。它把依赖管理从一件靠人记、靠自觉的事，变成了一个有节奏、有记录、可追溯的系统流程。
+
+**符合 SemVer 的升级节奏。** Dependabot 在 PR 里会标注每个升级的类型：patch、minor 还是 major。SemVer 的约定是 major 可能包含 breaking change，minor 和 patch 理论上兼容。这意味着你只需要重点看 major 升级，patch 和 minor 可以快速放行。本站那次 13 个更新里，`@astrojs/mdx` 从 7 跳到 8、`mermaid` 从 11 跳到 12，都是 major——这提醒我合并后必须跑构建验证，而不是无脑点 Merge。
+
+**符合“小步快跑”的工程原则。** 如果半年不升级，打开 `package.json` 会发现一堆依赖跨了好几个大版本，逐个验证的成本高到让人想放弃。每周小步升级，每次只动几个版本号，验证面很小，出问题也容易定位。
+
+**符合“关注点分离”的协作习惯。** Dependabot 的 PR 只改 `package.json` 和 `bun.lock` 两个文件，零业务代码改动。review 成本极低，回滚也干净——`git revert` 一下就行，不牵扯任何逻辑。
+
+**和 CI 天然配合。** 本站的部署 workflow 只在 push 到 `v1` 分支时触发。Dependabot 的 PR 本身不会触发部署，合并之后才会。这给了你一个天然的“合并前先本地验证”的缓冲期。
+
+## 四、如果不用 GitHub，能不能达到类似效果？
+
+---
+
+这是我觉得最有意思的部分。Dependabot 的机制并不神秘，拆开看就三件事：
+
+1. 读取依赖清单文件（`package.json`、`bun.lock`、`pyproject.toml` 等）
+2. 对比上游 registry 的最新版本
+3. 有差异就创建分支、提交变更、开 PR
+
+GitHub 把这三件事做成了托管服务，所以你什么都不用写。但同样的逻辑，你完全可以自己在非 GitHub 环境里复现。
+
+**思路一：用现成的开源替代品。** 最知名的是 [Renovate](https://docs.renovatebot.com/)，它支持的平台比 Dependabot 更广——GitLab、Bitbucket、Gitea 都能用。核心逻辑一模一样：读配置、扫依赖、开 MR/PR。如果你从 GitHub 迁移到 GitLab，在项目根目录放一个 `renovate.json`，接上 CI 就能获得几乎相同的体验。
+
+**思路二：自己写一个最小实现。** 如果你只用 CI 而不想引入第三方服务，在 CI 配置里加一个定时任务即可。伪代码大概长这样：
+
+```yaml
+# .gitlab-ci.yml 或任意 CI 的定时任务
+update-deps:
+  schedule: "0 9 * * 1"   # 每周一早上 9 点
+  script:
+    - bun update --latest   # 或 npm update，取决于你的包管理器
+    - git checkout -b deps/auto-update
+    - git commit -am "chore: auto update dependencies"
+    - git push origin deps/auto-update
+    # 再调用平台的 API 创建 MR/PR
+```
+
+关键是最后一步：需要调用平台 API 创建 MR，并附上版本变更信息。没有 Dependabot 那么精致（不会自动抓 changelog、不会分组、不会标注 SemVer 类型），但“自动化发现 + 人工审核合并”的核心流程是跑通的。
+
+**思路三：接受“半自动”。** 不追求自动开 PR，只追求自动提醒。在 CI 里加一个步骤，每次 push 时跑 `bun outdated` 或 `npm outdated`，有更新就在日志里高亮输出。虽然没有 PR 那么方便，但至少解决了“不知道有新版本”的问题。
+
+三种方式的共同点在于：**自动化的价值不在于“自动合并”，而在于“自动发现”。** 合并永远需要人来判断，因为工具不知道你的项目会不会被 breaking change 弄坏。
+
+## 五、回到我的使用方式
+
+---
+
+经过这段时间的使用，我固定下来一个节奏：
+
+- **发现**交给 Dependabot，每周自动开 PR。
+- **判断**由我来做：看一眼 PR 里的版本表，重点关注 major 升级的 changelog，确认没有影响本站用到的 API。
+- **验证**在本地跑：`bun install` → `bun run format:check` → `bun run build`，构建通过就合并。
+- **收尾**是合并后如果有格式变化，单独补一个提交，不让格式调整混进业务 diff 里。
+
+这套分工跑下来，依赖更新既不会拖延，也不会出事。Dependabot 比我勤快，但它不会替我做决定——自动化负责发现，人负责判断和收尾，这个边界保持住，工具才真正有用。
+
+## 参考
+
+---
+
+- [GitHub Docs: Dependabot 版本更新配置选项](https://docs.github.com/zh/code-security/dependabot/dependabot-version-updates/configuration-options-for-dependabot-version-updates)
+- [GitHub Docs: 使用 groups 优化 Dependabot PR 创建](https://docs.github.com/zh/code-security/dependabot/dependabot-version-updates/grouping-dependency-updates)
+- [GitHub Docs: Dependabot 支持的生态列表（含 Bun）](https://docs.github.com/zh/code-security/dependabot/troubleshooting-dependabot/troubleshooting-detection-of-vulnerable-dependencies)
+- [Semantic Versioning](https://semver.org/lang/zh-CN/)
+- [Renovate 文档](https://docs.renovatebot.com/)
