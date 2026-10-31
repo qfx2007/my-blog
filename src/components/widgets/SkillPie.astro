@@ -1,11 +1,10 @@
 ---
-// 关于页职业技能饼图：左图例 + 右饼图，点击图例/扇区凸出对应数据项。
-// 构建时直接生成 SVG，不依赖 ECharts；无 JS 时饼图与图例仍然完整可读，
-// 悬停/点击只负责高亮与凸出。
+// 关于页职业技能环形图：每片独立色（oklch 默认色相按索引均分，可用 item.color 覆盖）。
+// 构建时生成骨架、客户端绘制 SVG 弧；无 JS 时仍有隐藏摘要列表可读。
 interface SkillItem {
   name: string;
-  /** 等级权重：3 熟练 / 2 熟悉 / 1 了解——同时决定扇区角度与配色深浅 */
   value: number;
+  color?: string;
 }
 
 interface Props {
@@ -13,200 +12,16 @@ interface Props {
 }
 
 const { items } = Astro.props;
-
-const levelMark = (value: number) => (value >= 3 ? '+++' : value === 2 ? '++' : '+');
-const levelName = (value: number) => (value >= 3 ? '熟练' : value === 2 ? '熟悉' : '了解');
-
-const count = (value: number) => items.filter((item) => item.value === value).length;
-const ariaSummary =
-  `职业技能分布饼图，共 ${items.length} 项：` +
-  `熟练 ${count(3)} 项、熟悉 ${count(2)} 项、了解 ${count(1)} 项。`;
-
-const size = 540;
-const height = 340;
-const centerX = size / 2;
-const centerY = height / 2;
-const radius = 122;
-const labelLineLength = 15;
-const labelLineLength2 = 30;
-const labelDistance = 5;
-const labelMinY = 12;
-const labelMaxY = height - 12;
-const labelGapMax = 14;
-const total = items.reduce((sum, item) => sum + item.value, 0) || 1;
-
-const fillPercent = (value: number) => (value >= 3 ? 92 : value === 2 ? 72 : 52);
-const sliceStyle = (index: number, value: number) => {
-  const jitter = ((index * 37) % 9) - 4;
-  const fill = Math.max(38, Math.min(96, fillPercent(value) + jitter));
-
-  return `--slice-fill: color-mix(in oklab, var(--paper-accent) ${fill}%, var(--paper-surface));`;
-};
-
-type Slice = {
-  name: string;
-  value: number;
-  percent: number;
-  path: string;
-  style: string;
-  labelSide: 'left' | 'right';
-  labelX: number;
-  labelY: number;
-  edgeX: number;
-  edgeY: number;
-  elbowX: number;
-  lineEndX: number;
-};
-
-let currentAngle = -Math.PI / 2;
-const slices: Slice[] = items.map((item, index) => {
-  const startAngle = currentAngle;
-  const sweep = (item.value / total) * Math.PI * 2;
-  const endAngle = startAngle + sweep;
-  currentAngle = endAngle;
-
-  const x1 = centerX + radius * Math.cos(startAngle);
-  const y1 = centerY + radius * Math.sin(startAngle);
-  const x2 = centerX + radius * Math.cos(endAngle);
-  const y2 = centerY + radius * Math.sin(endAngle);
-  const largeArc = sweep > Math.PI ? 1 : 0;
-
-  const middleAngle = startAngle + sweep / 2;
-  const offsetX = Math.cos(middleAngle) * 14;
-  const offsetY = Math.sin(middleAngle) * 14;
-  const nx = Math.cos(middleAngle);
-  const ny = Math.sin(middleAngle);
-  const dir = nx >= 0 ? 1 : -1;
-  const edgeX = centerX + radius * nx;
-  const edgeY = centerY + radius * ny;
-  const elbowX = edgeX + nx * labelLineLength;
-  const elbowY = edgeY + ny * labelLineLength;
-  const lineEndX = elbowX + dir * labelLineLength2;
-  const labelX = lineEndX + dir * labelDistance;
-
-  return {
-    ...item,
-    percent: Math.round((item.value / total) * 100),
-    path: `M ${centerX} ${centerY} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${radius} ${radius} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`,
-    style:
-      `${sliceStyle(index, item.value)} ` +
-      `--slice-tx: ${offsetX.toFixed(2)}px; --slice-ty: ${offsetY.toFixed(2)}px;`,
-    labelSide: dir > 0 ? 'right' : 'left',
-    labelX,
-    labelY: elbowY,
-    edgeX,
-    edgeY,
-    elbowX,
-    lineEndX,
-  };
-});
-
-for (const side of ['left', 'right'] as const) {
-  const group = slices
-    .filter((slice) => slice.labelSide === side)
-    .sort((a, b) => a.labelY - b.labelY);
-
-  if (group.length === 0) continue;
-
-  const gap = Math.min(labelGapMax, (labelMaxY - labelMinY) / Math.max(1, group.length - 1));
-  let previousY = labelMinY - gap;
-  for (const slice of group) {
-    slice.labelY = Math.max(slice.labelY, previousY + gap);
-    previousY = slice.labelY;
-  }
-
-  let nextY = labelMaxY + gap;
-  for (let index = group.length - 1; index >= 0; index--) {
-    const slice = group[index];
-    slice.labelY = Math.min(slice.labelY, nextY - gap);
-    nextY = slice.labelY;
-  }
-
-  const dir = side === 'right' ? 1 : -1;
-  const radialEnd = radius + labelLineLength;
-  let ellipseRadiusY = radialEnd;
-  let maxDy = -1;
-  for (const slice of group) {
-    const dy = Math.abs(slice.labelY - centerY);
-    if (dy >= maxDy) {
-      const dx = slice.labelX - centerX - labelLineLength2 * dir;
-      const ratio = Math.abs(dx) < radialEnd ? 1 - (dx * dx) / (radialEnd * radialEnd) : 0;
-      ellipseRadiusY = ratio > 0 ? Math.sqrt((dy * dy) / ratio) : radialEnd;
-      maxDy = dy;
-    }
-  }
-
-  for (const slice of group) {
-    const dy = Math.abs(slice.labelY - centerY);
-    const ratio = Math.max(0, 1 - (dy * dy) / (ellipseRadiusY * ellipseRadiusY));
-    const dx = Math.sqrt(ratio * radialEnd * radialEnd);
-    slice.labelX = centerX + (dx + labelLineLength2) * dir;
-    slice.lineEndX = slice.labelX - dir * labelDistance;
-    slice.elbowX = slice.lineEndX - dir * labelLineLength2;
-  }
-}
 ---
 
-<div class="skill-pie" data-skill-pie>
-  <!-- 自定义图例：点击凸出扇区，而不是隐藏数据 -->
-  <div class="skill-pie__legend">
-    {items.map((item, index) => (
-      <button
-        type="button"
-        class="skill-pie__legend-item"
-        style={sliceStyle(index, item.value)}
-        data-name={item.name}
-        data-legend
-        aria-pressed="false"
-        aria-label={`${item.name}，${levelName(item.value)}${levelMark(item.value)}`}
-      >
-        <span class="skill-pie__swatch" aria-hidden="true" />
-        <span class="skill-pie__legend-name">{item.name}</span>
-        <span class="skill-pie__legend-level" aria-hidden="true">
-          {levelMark(item.value)}
-        </span>
-      </button>
-    ))}
-  </div>
-  <div class="skill-pie__chart">
-    <svg
-      class="skill-pie__svg"
-      viewBox={`0 0 ${size} ${height}`}
-      role="img"
-      aria-label={ariaSummary}
-    >
-      {slices.map((slice) => (
-        <g
-          class="skill-pie__slice-group"
-          style={slice.style}
-          data-slice-group
-          data-name={slice.name}
-        >
-          <path class="skill-pie__slice" d={slice.path} data-name={slice.name} data-slice>
-            <title>{`${slice.name} · ${levelName(slice.value)}${levelMark(slice.value)} · ${slice.percent}%`}</title>
-          </path>
-          <path
-            class="skill-pie__label-line"
-            d={`M ${slice.edgeX.toFixed(2)} ${slice.edgeY.toFixed(2)} L ${slice.elbowX.toFixed(2)} ${slice.labelY.toFixed(2)} L ${slice.lineEndX.toFixed(2)} ${slice.labelY.toFixed(2)}`}
-            aria-hidden="true"
-          />
-          <text
-            class="skill-pie__label"
-            x={slice.labelX}
-            y={slice.labelY}
-            text-anchor={slice.labelSide === 'right' ? 'start' : 'end'}
-            dominant-baseline="middle"
-            aria-hidden="true"
-            data-label
-            data-name={slice.name}
-          >
-            {slice.name}
-          </text>
-        </g>
-      ))}
-    </svg>
-  </div>
-</div>
+<div class="skill-pie" data-skill-pie data-items={JSON.stringify(items)}></div>
+<ul class="skill-pie__sr-only" aria-label="技能分布摘要">
+  {items.map((item) => (
+    <li>
+      {item.name}：{item.value}
+    </li>
+  ))}
+</ul>
 
 <script>
   const setup = () => {
@@ -214,51 +29,154 @@ for (const side of ['left', 'right'] as const) {
       if (host.dataset.wired) return;
       host.dataset.wired = 'true';
 
-      const slices = Array.from(host.querySelectorAll<SVGPathElement>('[data-slice]'));
-      const groups = Array.from(host.querySelectorAll<SVGGElement>('[data-slice-group]'));
-      const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('[data-legend]'));
-      const selected = new Set<string>();
-      const groupByName = new Map(groups.map((group) => [group.dataset.name ?? '', group]));
-      const buttonByName = new Map(buttons.map((button) => [button.dataset.name ?? '', button]));
+      const items = JSON.parse(host.dataset.items || '[]') as {
+        name: string;
+        value: number;
+        color?: string;
+      }[];
+      const total = items.reduce((s, i) => s + i.value, 0) || 1;
 
-      const sync = () => {
-        buttons.forEach((button) => {
-          const active = selected.has(button.dataset.name ?? '');
-          button.setAttribute('aria-pressed', String(active));
-          button.classList.toggle('is-active', active);
+      const size = 620;
+      const height = 360;
+      const cx = size / 2;
+      const cy = height / 2;
+      const outer = 118;
+      const inner = 70;
+      const labelRadius = outer + 16;
+      const labelMinY = 14;
+      const labelMaxY = height - 14;
+      const labelGap = 13;
+
+      const hueFor = (index: number) => Math.round((index * 360) / Math.max(items.length, 1));
+      const colorFor = (index: number) => items[index].color || `oklch(70% 0.075 ${hueFor(index)})`;
+
+      const polar = (r: number, a: number) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+
+      const arcPath = (start: number, end: number) => {
+        const [x1, y1] = polar(outer, start);
+        const [x2, y2] = polar(outer, end);
+        const [x3, y3] = polar(inner, end);
+        const [x4, y4] = polar(inner, start);
+        const large = end - start > Math.PI ? 1 : 0;
+        return (
+          `M ${x1.toFixed(2)} ${y1.toFixed(2)} ` +
+          `A ${outer} ${outer} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} ` +
+          `L ${x3.toFixed(2)} ${y3.toFixed(2)} ` +
+          `A ${inner} ${inner} 0 ${large} 0 ${x4.toFixed(2)} ${y4.toFixed(2)} Z`
+        );
+      };
+
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('class', 'skill-pie__svg');
+      svg.setAttribute('viewBox', `0 0 ${size} ${height}`);
+      svg.setAttribute('role', 'img');
+      svg.setAttribute(
+        'aria-label',
+        `职业技能分布环形图，共 ${items.length} 项，按熟练度从高到低排列`,
+      );
+
+      type LabelInfo = {
+        g: SVGGElement;
+        text: SVGTextElement;
+        line: SVGPathElement;
+        color: string;
+        side: 'left' | 'right';
+        y: number;
+        x: number;
+      };
+      const labels: LabelInfo[] = [];
+
+      let angle = -Math.PI / 2;
+      items.forEach((item, index) => {
+        const sweep = (item.value / total) * Math.PI * 2;
+        const start = angle;
+        const end = angle + sweep;
+        angle = end;
+        const mid = start + sweep / 2;
+
+        const color = colorFor(index);
+        const [dx, dy] = [Math.cos(mid), Math.sin(mid)];
+
+        const g = document.createElementNS(svgNS, 'g');
+        g.setAttribute('class', 'skill-pie__slice-group');
+        g.dataset.name = item.name;
+        g.style.setProperty('--explode-x', `${(dx * 12).toFixed(2)}px`);
+        g.style.setProperty('--explode-y', `${(dy * 12).toFixed(2)}px`);
+        g.style.setProperty('--slice-color', color);
+
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('class', 'skill-pie__slice');
+        path.setAttribute('d', arcPath(start, end));
+
+        const title = document.createElementNS(svgNS, 'title');
+        title.textContent = `${item.name} · ${item.value}`;
+        path.appendChild(title);
+        g.appendChild(path);
+
+        // 标签：放在扇区弧线外侧
+        const text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('class', 'skill-pie__label');
+        text.setAttribute('dominant-baseline', 'middle');
+        text.textContent = item.name;
+
+        const line = document.createElementNS(svgNS, 'path');
+        line.setAttribute('class', 'skill-pie__label-line');
+        g.appendChild(line);
+        g.appendChild(text);
+        svg.appendChild(g);
+
+        const [ex, ey] = polar(labelRadius, mid);
+        labels.push({
+          g,
+          text,
+          line,
+          color,
+          side: dx >= 0 ? 'right' : 'left',
+          y: ey,
+          x: ex,
         });
-        groups.forEach((group) => {
-          group.classList.toggle('is-selected', selected.has(group.dataset.name ?? ''));
-        });
-      };
 
-      const setHover = (name: string, active: boolean) => {
-        groupByName.get(name)?.classList.toggle('is-hover', active);
-        buttonByName.get(name)?.classList.toggle('is-hover', active);
-      };
-
-      const toggle = (name: string) => {
-        if (!name) return;
-        if (selected.has(name)) selected.delete(name);
-        else selected.add(name);
-        sync();
-      };
-
-      buttons.forEach((button) => {
-        const name = button.dataset.name ?? '';
-        button.addEventListener('mouseenter', () => setHover(name, true));
-        button.addEventListener('mouseleave', () => setHover(name, false));
-        button.addEventListener('focus', () => setHover(name, true));
-        button.addEventListener('blur', () => setHover(name, false));
-        button.addEventListener('click', () => toggle(name));
+        const toggle = () => g.classList.toggle('is-selected');
+        path.addEventListener('click', toggle);
+        path.addEventListener('mouseenter', () => g.classList.add('is-hover'));
+        path.addEventListener('mouseleave', () => g.classList.remove('is-hover'));
       });
 
-      slices.forEach((slice) => {
-        const name = slice.dataset.name ?? '';
-        slice.addEventListener('mouseenter', () => setHover(name, true));
-        slice.addEventListener('mouseleave', () => setHover(name, false));
-        slice.addEventListener('click', () => toggle(name));
-      });
+      // 标签防重叠：左右两侧各自按 y 排序后按最小间距推开
+      for (const side of ['right', 'left'] as const) {
+        const group = labels.filter((l) => l.side === side).sort((a, b) => a.y - b.y);
+        if (!group.length) continue;
+
+        const gap = Math.min(labelGap, (labelMaxY - labelMinY) / Math.max(1, group.length - 1));
+        let prev = labelMinY - gap;
+        for (const l of group) {
+          l.y = Math.max(l.y, prev + gap);
+          prev = l.y;
+        }
+        let next = labelMaxY + gap;
+        for (let i = group.length - 1; i >= 0; i--) {
+          group[i].y = Math.min(group[i].y, next - gap);
+          next = group[i].y;
+        }
+      }
+
+      for (const l of labels) {
+        const dir = l.side === 'right' ? 1 : -1;
+        const anchorX = cx + dir * (outer + 6);
+        const endX = cx + dir * (outer + 24);
+        l.line.setAttribute(
+          'd',
+          `M ${anchorX.toFixed(2)} ${l.y.toFixed(2)} L ${endX.toFixed(2)} ${l.y.toFixed(2)}`,
+        );
+        l.text.setAttribute('x', (endX + dir * 5).toFixed(2));
+        l.text.setAttribute('y', l.y.toFixed(2));
+        l.text.setAttribute('text-anchor', l.side === 'right' ? 'start' : 'end');
+        l.text.style.fill = l.color;
+        l.line.style.stroke = l.color;
+      }
+
+      host.appendChild(svg);
     });
   };
 
@@ -267,228 +185,123 @@ for (const side of ['left', 'right'] as const) {
 </script>
 
 <style>
-  /* 容器：桌面端图例在左、饼图在右 */
   .skill-pie {
     display: flex;
-    gap: 1.5rem;
-    align-items: stretch;
+    justify-content: center;
     margin: 1.5rem 0 2rem;
-  }
-
-  /* 图例列：固定宽度，条目多时在列内滚动，不撑破版心 */
-  .skill-pie__legend {
-    flex: 0 0 11.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    max-height: 28.75rem;
-    overflow-y: auto;
-    padding-right: 0.25rem;
-  }
-
-  /* 注意：Chrome 121+ 只要元素上出现 scrollbar-width / scrollbar-color，
-     就会忽略下面整套 ::-webkit-scrollbar 规则并退回原生滚动条（带箭头和灰轨道），
-     所以标准属性只在不支持 webkit 伪元素的 Firefox 里生效，两套写法严格分开。
-     与首页 DoingCard 的 activity-feed 同一套模式。 */
-  @supports selector(::-webkit-scrollbar) {
-    /* Chromium / Safari：完全接管滚动条，6px 细条 */
-    .skill-pie__legend::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    /* 轨道透明，直接透出版心背景 */
-    .skill-pie__legend::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    /* 滑块默认透明：鼠标不在图例列区域时整条滚动条不可见 */
-    .skill-pie__legend::-webkit-scrollbar-thumb {
-      background: transparent;
-      border-radius: 999px;
-    }
-
-    /* 去掉滚动条上下箭头按钮 */
-    .skill-pie__legend::-webkit-scrollbar-button:vertical:start:decrement,
-    .skill-pie__legend::-webkit-scrollbar-button:vertical:end:increment,
-    .skill-pie__legend::-webkit-scrollbar-button:vertical:single-button {
-      display: none;
-      background: transparent;
-      height: 0;
-    }
-
-    /* 鼠标进入图例列时才显示滑块（轨道始终保持透明） */
-    .skill-pie__legend:hover::-webkit-scrollbar-thumb,
-    .skill-pie__legend:focus-visible::-webkit-scrollbar-thumb {
-      background: var(--paper-ink-faint);
-    }
-  }
-
-  @supports not selector(::-webkit-scrollbar) {
-    /* Firefox：默认完全隐藏滚动条，悬停或键盘聚焦时显示细滚动条 */
-    .skill-pie__legend {
-      scrollbar-width: none;
-    }
-
-    .skill-pie__legend:hover,
-    .skill-pie__legend:focus-visible {
-      scrollbar-width: thin;
-      scrollbar-color: var(--paper-ink-faint) transparent;
-    }
-  }
-
-  .skill-pie__legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    width: 100%;
-    padding: 0.22rem 0.4rem;
-    margin: 0;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--paper-ink-soft);
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-size: 0.78rem;
-    line-height: 1.5;
-    text-align: left;
-    transition:
-      color 160ms ease,
-      background-color 160ms ease;
-  }
-
-  .skill-pie__legend-item:hover,
-  .skill-pie__legend-item:focus-visible,
-  .skill-pie__legend-item.is-hover {
-    color: var(--paper-ink);
-    background: color-mix(in srgb, var(--paper-accent) 7%, transparent);
-    outline: none;
-  }
-
-  .skill-pie__legend-item.is-active {
-    color: var(--paper-ink);
-    background: color-mix(in srgb, var(--paper-accent) 12%, transparent);
-  }
-
-  .skill-pie__swatch {
-    flex: 0 0 0.55rem;
-    width: 0.55rem;
-    height: 0.55rem;
-    border-radius: 2px;
-    background: var(--slice-fill, var(--paper-accent));
-  }
-
-  .skill-pie__legend-name {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .skill-pie__legend-level {
-    color: var(--paper-ink-faint);
-    font-family: var(--font-mono, monospace);
-    font-size: 0.68rem;
-    letter-spacing: 0.02em;
-  }
-
-  /* 饼图区：SVG 使用 viewBox，父容器给高度以保证和左侧图例对齐 */
-  .skill-pie__chart {
-    flex: 1;
-    display: grid;
-    min-width: 0;
-    height: 28.75rem;
-    place-items: center;
   }
 
   .skill-pie__svg {
     width: 100%;
-    height: 100%;
-    max-height: 28.75rem;
-    overflow: visible;
+    max-width: 38rem;
+    height: auto;
+    max-height: 26rem;
+    animation: pie-fade-in 640ms ease both;
   }
 
   .skill-pie__slice-group {
-    transition: transform 160ms ease;
+    transition: transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .skill-pie__slice-group.is-hover {
+    transform: scale(1.035);
+    transform-box: view-box;
+    transform-origin: center;
   }
 
   .skill-pie__slice-group.is-selected {
-    transform: translate(var(--slice-tx, 0), var(--slice-ty, 0));
+    transform: translate(var(--explode-x, 0), var(--explode-y, 0));
+  }
+
+  .skill-pie__slice-group.is-hover.is-selected {
+    transform: translate(var(--explode-x, 0), var(--explode-y, 0)) scale(1.035);
   }
 
   .skill-pie__slice {
-    fill: var(--slice-fill, var(--paper-accent));
+    fill: var(--slice-color, var(--paper-accent));
     stroke: var(--paper-surface);
-    stroke-width: 1.5;
+    stroke-width: 2;
     stroke-linejoin: round;
     cursor: pointer;
-    transition: filter 160ms ease;
+    transition:
+      filter 220ms ease,
+      opacity 220ms ease;
   }
 
-  .skill-pie__slice:hover,
+  /* 悬停时其余扇区变淡，突出当前项 */
+  .skill-pie__svg:has(.skill-pie__slice-group.is-hover)
+    .skill-pie__slice-group:not(.is-hover)
+    .skill-pie__slice {
+    opacity: 0.4;
+  }
+
   .skill-pie__slice-group.is-hover .skill-pie__slice {
-    filter: brightness(1.06);
+    filter: brightness(1.1);
   }
 
   .skill-pie__label-line {
     fill: none;
-    stroke: color-mix(in oklab, var(--slice-fill) 55%, var(--paper-ink-faint));
     stroke-width: 1;
     stroke-linecap: round;
-    stroke-linejoin: round;
+    opacity: 0.75;
     pointer-events: none;
-    transition: stroke 160ms ease;
+    transition: opacity 220ms ease;
   }
 
   .skill-pie__label {
-    fill: color-mix(in oklab, var(--slice-fill) 65%, var(--paper-ink));
     font-family: var(--font-body);
     font-size: 10px;
     letter-spacing: 0.01em;
-    paint-order: stroke;
-    stroke: var(--paper-surface);
-    stroke-width: 2.4px;
-    stroke-linejoin: round;
     pointer-events: none;
-    transition: fill 160ms ease;
+    transition:
+      fill 220ms ease,
+      opacity 220ms ease;
   }
 
   .skill-pie__slice-group.is-hover .skill-pie__label,
   .skill-pie__slice-group.is-selected .skill-pie__label {
-    fill: var(--paper-ink);
+    font-weight: 700;
   }
 
-  .skill-pie__slice-group.is-hover .skill-pie__label-line,
   .skill-pie__slice-group.is-selected .skill-pie__label-line {
-    stroke: var(--paper-accent);
+    opacity: 1;
+  }
+
+  .skill-pie__sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @keyframes pie-fade-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   @media (max-width: 640px) {
-    .skill-pie {
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    /* 窄屏：饼图置顶，图例改为整行跟随（页面本身可纵向滚动）；
-       flex 必须重置为 none——column 布局下 flex:1 的 flex-basis:0% 会压掉 height */
-    .skill-pie__chart {
-      flex: none;
-      order: -1;
-      height: 20rem;
-    }
-
-    .skill-pie__legend {
-      flex: none;
-      max-height: none;
-      overflow-y: visible;
+    .skill-pie__label {
+      font-size: 9px;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .skill-pie__legend-item,
-    .skill-pie__slice,
+    .skill-pie__svg {
+      animation: none;
+    }
     .skill-pie__slice-group,
+    .skill-pie__slice,
     .skill-pie__label,
     .skill-pie__label-line {
       transition: none;

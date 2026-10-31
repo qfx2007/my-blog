@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 interface Payload {
   contributions?: Record<string, number>;
+  sources?: { github?: number; gitee?: number };
 }
 let payload: Payload = {};
 try {
@@ -19,6 +20,7 @@ const values = Array.from({ length: 100 }, (_, index) => {
   return [key, stored[key] ?? 0] as [string, number];
 });
 const max = Math.max(1, ...values.map(([, count]) => count));
+const total = values.reduce((sum, [, count]) => sum + count, 0);
 const level = (count: number) => (count === 0 ? 0 : Math.min(4, Math.ceil((count / max) * 4)));
 const format = new Intl.DateTimeFormat('zh-CN', {
   timeZone: 'Asia/Shanghai',
@@ -31,7 +33,7 @@ const format = new Intl.DateTimeFormat('zh-CN', {
 <article class="glass-card contribution-card" aria-label="GitHub 和 Gitee 贡献热力图">
   <header>
     <strong>贡献记录</strong>
-    <span>最近 100 天</span>
+    <span>最近100天: {total} 次</span>
   </header>
   <div class="contribution-grid">
     {values.map(([date, count]) => (
@@ -42,6 +44,15 @@ const format = new Intl.DateTimeFormat('zh-CN', {
         aria-label={`${format.format(new Date(`${date}T12:00:00+08:00`))} · 共${count}次贡献`}
       ></time>
     ))}
+  </div>
+  <div class="contribution-legend" aria-label="贡献次数图例">
+    <span>少</span>
+    <i class="level-0"></i>
+    <i class="level-1"></i>
+    <i class="level-2"></i>
+    <i class="level-3"></i>
+    <i class="level-4"></i>
+    <span>多</span>
   </div>
 </article>
 <style>
@@ -75,6 +86,20 @@ const format = new Intl.DateTimeFormat('zh-CN', {
     min-width: 0;
     border-radius: 2px;
     background: var(--paper-control);
+  }
+  .contribution-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 3px;
+    color: var(--paper-ink-soft);
+    font-size: 0.68rem;
+  }
+  .contribution-legend i {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 1px;
   }
   .level-1 {
     background: color-mix(in srgb, var(--paper-accent) 28%, var(--paper-control));
