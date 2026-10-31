@@ -3,7 +3,8 @@
   <div class="click-effects"></div>
 </div>
 
-<style>
+<style is:global>
+  /* 调参入口：打字速度见 setTimeout(type, 52)；樱花间隔/数量见 setInterval(petal, 900) 与初始循环；点击粒子数量见循环 i < 14。 */
   .ambient-effects,
   .sakura-layer,
   .click-effects {
@@ -88,8 +89,15 @@
     if (window.__navfolioAmbientEffects) return;
     window.__navfolioAmbientEffects = true;
     const mount = () => {
-      const sakura = document.querySelector('.sakura-layer');
-      const clicks = document.querySelector('.click-effects');
+      let root = document.querySelector('.ambient-effects');
+      if (!root) {
+        root = document.createElement('div');
+        root.className = 'ambient-effects';
+        root.innerHTML = '<div class="sakura-layer"></div><div class="click-effects"></div>';
+        document.body.append(root);
+      }
+      const sakura = root.querySelector('.sakura-layer');
+      const clicks = root.querySelector('.click-effects');
       const typewriter = document.querySelector('[data-typewriter]');
       if (typewriter && !typewriter.dataset.typed) {
         typewriter.dataset.typed = 'true';
@@ -103,7 +111,7 @@
         const type = () => {
           if (index < text.length) {
             cursor.before(document.createTextNode(text[index++]));
-            setTimeout(type, 52);
+            setTimeout(type, 100);
           } else setTimeout(() => cursor.remove(), 700);
         };
         type();
@@ -121,8 +129,8 @@
         sakura.append(node);
         node.addEventListener('animationend', () => node.remove());
       };
-      setInterval(petal, 900);
-      for (let i = 0; i < 7; i++) setTimeout(petal, i * 450);
+      setInterval(petal, 300);
+      for (let i = 0; i < 20; i++) setTimeout(petal, i * 450);
       document.addEventListener('click', (event) => {
         if (!clicks) return;
         const ring = document.createElement('i');
@@ -131,7 +139,7 @@
         ring.style.top = `${event.clientY}px`;
         clicks.append(ring);
         ring.addEventListener('animationend', () => ring.remove());
-        for (let i = 0; i < 14; i++) {
+        for (let i = 0; i < 30; i++) {
           const particle = document.createElement('i');
           particle.className = 'burst-particle';
           const angle = (Math.PI * 2 * i) / 14 + (Math.random() - 0.5) * 0.35;
@@ -140,7 +148,7 @@
           particle.style.top = `${event.clientY}px`;
           particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
           particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
-          particle.style.setProperty('--size', `${3 + Math.random() * 3}px`);
+          particle.style.setProperty('--size', `${15 + Math.random() * 3}px`);
           particle.style.setProperty('--duration', `${420 + Math.random() * 180}ms`);
           particle.style.setProperty(
             '--color',
