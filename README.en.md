@@ -236,9 +236,9 @@ comments: false
 
 ## Deployment
 
-The site builds to static files in `dist` and can be deployed to GitHub Pages, Vercel, Netlify, Cloudflare Pages, or any platform that supports Astro static output.
+The site builds to static files in `dist` and can be deployed to Cloudflare, Vercel, Netlify, or any platform that supports Astro static output.
 
-For GitHub Pages project sites, the included workflow can be used directly. `astro.config.mjs` automatically handles the project-page `base` in GitHub Actions, and it can also be overridden manually:
+To override the site URL or base path:
 
 ```sh
 SITE_URL=https://example.com SITE_BASE=/astro-navfolio bun run build

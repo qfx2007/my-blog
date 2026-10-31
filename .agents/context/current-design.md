@@ -86,4 +86,4 @@ collection、默认 navigation、scaffold 和 i18n contribution 都应消失。
 - package-owned route 不直接 import 主站私有路径，而通过 virtual runtime。
 - plugin 结构契约与 theme 视觉契约分离。
 - producer 与 consumer 通过可验证、隐私安全的数据契约连接。
-- 保持静态输出、无 secret 入库和 GitHub Pages 子路径兼容。
+- 保持静态输出、无 secret 入库和子路径部署兼容。

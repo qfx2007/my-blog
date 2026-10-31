@@ -234,9 +234,9 @@ comments: false
 
 ## 部署
 
-站点会构建为 `dist` 中的静态文件，可以部署到 GitHub Pages、Vercel、Netlify、Cloudflare Pages，或任何支持 Astro 静态输出的平台。
+站点会构建为 `dist` 中的静态文件，可以部署到 Cloudflare、Vercel、Netlify 或任何支持 Astro 静态输出的平台。
 
-GitHub Pages 项目页可使用仓库内置 workflow。`astro.config.mjs` 会根据 GitHub Actions 环境自动处理项目页 `base`，也可以手动覆盖：
+需要覆盖站点地址或子路径时：
 
 ```sh
 SITE_URL=https://example.com SITE_BASE=/astro-navfolio bun run build

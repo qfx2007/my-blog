@@ -38,29 +38,13 @@ const normalizeSiteUrl = (value) => {
   return /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 };
 
-const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
 const customSite = process.env.SITE_URL;
 const customBase = process.env.SITE_BASE;
-const repositoryOwner = process.env.GITHUB_REPOSITORY_OWNER;
-const repositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1];
-const isProjectPage =
-  Boolean(repositoryOwner) &&
-  Boolean(repositoryName) &&
-  repositoryName !== `${repositoryOwner}.github.io`;
-
-const githubPagesSite =
-  repositoryOwner && repositoryName
-    ? `https://${repositoryOwner}.github.io${isProjectPage ? `/${repositoryName}` : ''}`
-    : undefined;
 
 const resolvedSite =
-  normalizeSiteUrl(customSite) ||
-  (isGitHubActions && githubPagesSite ? githubPagesSite : undefined) ||
-  normalizeSiteUrl(configuredSiteUrl) ||
-  'https://example.com';
+  normalizeSiteUrl(customSite) || normalizeSiteUrl(configuredSiteUrl) || 'https://example.com';
 
-const resolvedBase =
-  customBase || (isGitHubActions && isProjectPage && repositoryName ? `/${repositoryName}` : '/');
+const resolvedBase = customBase || '/';
 
 // https://astro.build/config
 export default defineConfig({
