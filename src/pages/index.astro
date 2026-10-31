@@ -5,7 +5,7 @@ import NavigationCard from '../components/cards/NavigationCard.astro';
 import ProfileCard from '../components/cards/ProfileCard.astro';
 import DashboardFlow from '../components/layout/DashboardFlow.astro';
 import BlogHeatmap from '../components/widgets/BlogHeatmap.astro';
-import ContributionHeatmap from '../components/widgets/ContributionHeatmap.astro';
+
 import DoingCard from '../components/widgets/DoingCard.astro';
 import { getSiteConfig } from '../data/site';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -33,7 +33,7 @@ const { home, profile, site } = await getSiteConfig();
         activeDaysBase={home.latest.activeDaysBase}
         dayStreakBase={home.latest.dayStreakBase}
       />
-      <ContributionHeatmap />
+      {/* <ContributionHeatmap /> */}
     </Fragment>
 
     <Fragment slot="navigation">
