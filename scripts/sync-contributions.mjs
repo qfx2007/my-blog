@@ -51,12 +51,28 @@ async function gitee() {
   if (!response.ok) throw new Error(`Gitee contribution endpoint ${response.status}`);
   const body = await response.json();
   const entries = Array.isArray(body) ? body : body.data;
-  if (!Array.isArray(entries)) throw new Error('Gitee native contribution data unavailable');
   const result = empty();
+  if (!Array.isArray(entries) && body && typeof body === 'object') {
+    for (const [date, count] of Object.entries(body))
+      if (date in result && Number.isFinite(Number(count))) result[date] = Number(count);
+    if (Object.values(result).some((count) => count > 0)) return result;
+  }
+  if (!Array.isArray(entries)) throw new Error('Gitee native contribution data unavailable');
   for (const item of entries) {
-    const date = item.date || item.day || item.contribution_date;
-    const count = item.count ?? item.contribution_count ?? item.contributions;
-    if (date in result && Number.isFinite(Number(count))) result[date] = Number(count);
+    const rawDate = item.date || item.day || item.contribution_date || item.created_at;
+    if (!rawDate) continue;
+    const date = String(rawDate);
+    const localDate = item.created_at
+      ? new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Shanghai',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }).format(new Date(rawDate))
+      : date.slice(0, 10);
+    if (!(localDate in result)) continue;
+    const count = item.count ?? item.contribution_count ?? item.contributions ?? item.commits;
+    result[localDate] += Number.isFinite(Number(count)) ? Number(count) : 1;
   }
   return result;
 }
@@ -70,6 +86,10 @@ try {
   const payload = {
     updatedAt: new Date().toISOString(),
     period: { start: key(start), end: key(end), days },
+    sources: {
+      github: Object.values(gh).reduce((sum, count) => sum + count, 0),
+      gitee: Object.values(gt).reduce((sum, count) => sum + count, 0),
+    },
     contributions,
   };
   await mkdir('public', { recursive: true });
