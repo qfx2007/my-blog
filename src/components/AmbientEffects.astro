@@ -1,0 +1,157 @@
+<div class="ambient-effects" aria-hidden="true">
+  <div class="sakura-layer"></div>
+  <div class="click-effects"></div>
+</div>
+
+<style>
+  .ambient-effects,
+  .sakura-layer,
+  .click-effects {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+  .ambient-effects {
+    z-index: 8;
+    overflow: hidden;
+  }
+  .sakura-layer {
+    z-index: 0;
+  }
+  .click-effects {
+    z-index: 1;
+  }
+  .petal {
+    position: absolute;
+    top: -24px;
+    width: 10px;
+    height: 7px;
+    border-radius: 100% 0 100% 0;
+    background: color-mix(in srgb, var(--paper-accent) 62%, #f6a6b8);
+    opacity: 0.46;
+    animation: petal-fall linear forwards;
+  }
+  .burst-particle {
+    position: absolute;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background: var(--color);
+    animation: burst var(--duration) cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  }
+  .burst-ring {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--paper-accent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: ring 560ms ease-out forwards;
+  }
+  .typewriter-cursor {
+    color: var(--paper-accent);
+    animation: cursor-blink 800ms steps(2, end) infinite;
+  }
+  @keyframes petal-fall {
+    to {
+      transform: translate3d(var(--drift), 110vh, 0) rotate(var(--spin));
+      opacity: 0;
+    }
+  }
+  @keyframes burst {
+    to {
+      transform: translate3d(var(--x), var(--y), 0) scale(0.35);
+      opacity: 0;
+    }
+  }
+  @keyframes ring {
+    to {
+      width: 130px;
+      height: 130px;
+      opacity: 0;
+    }
+  }
+  @keyframes cursor-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ambient-effects {
+      display: none;
+    }
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    if (window.__navfolioAmbientEffects) return;
+    window.__navfolioAmbientEffects = true;
+    const mount = () => {
+      const sakura = document.querySelector('.sakura-layer');
+      const clicks = document.querySelector('.click-effects');
+      const typewriter = document.querySelector('[data-typewriter]');
+      if (typewriter && !typewriter.dataset.typed) {
+        typewriter.dataset.typed = 'true';
+        const text = typewriter.getAttribute('aria-label') || '';
+        typewriter.textContent = '';
+        let index = 0;
+        const cursor = document.createElement('span');
+        cursor.textContent = '|';
+        cursor.className = 'typewriter-cursor';
+        typewriter.append(cursor);
+        const type = () => {
+          if (index < text.length) {
+            cursor.before(document.createTextNode(text[index++]));
+            setTimeout(type, 52);
+          } else setTimeout(() => cursor.remove(), 700);
+        };
+        type();
+      }
+      if (!sakura || sakura.dataset.ready) return;
+      sakura.dataset.ready = 'true';
+      const petal = () => {
+        const node = document.createElement('i');
+        node.className = 'petal';
+        node.style.left = `${Math.random() * 100}%`;
+        node.style.setProperty('--drift', `${(Math.random() - 0.5) * 180}px`);
+        node.style.setProperty('--spin', `${360 + Math.random() * 540}deg`);
+        node.style.animationDuration = `${8 + Math.random() * 8}s`;
+        node.style.transform = `rotate(${Math.random() * 180}deg)`;
+        sakura.append(node);
+        node.addEventListener('animationend', () => node.remove());
+      };
+      setInterval(petal, 900);
+      for (let i = 0; i < 7; i++) setTimeout(petal, i * 450);
+      document.addEventListener('click', (event) => {
+        if (!clicks) return;
+        const ring = document.createElement('i');
+        ring.className = 'burst-ring';
+        ring.style.left = `${event.clientX}px`;
+        ring.style.top = `${event.clientY}px`;
+        clicks.append(ring);
+        ring.addEventListener('animationend', () => ring.remove());
+        for (let i = 0; i < 14; i++) {
+          const particle = document.createElement('i');
+          particle.className = 'burst-particle';
+          const angle = (Math.PI * 2 * i) / 14 + (Math.random() - 0.5) * 0.35;
+          const distance = 28 + Math.random() * 42;
+          particle.style.left = `${event.clientX}px`;
+          particle.style.top = `${event.clientY}px`;
+          particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+          particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+          particle.style.setProperty('--size', `${3 + Math.random() * 3}px`);
+          particle.style.setProperty('--duration', `${420 + Math.random() * 180}ms`);
+          particle.style.setProperty(
+            '--color',
+            ['#e99b9b', '#e7b85d', '#82b894', '#82a9cf'][i % 4],
+          );
+          clicks.append(particle);
+          particle.addEventListener('animationend', () => particle.remove());
+        }
+      });
+    };
+    mount();
+    document.addEventListener('astro:page-load', mount);
+  })();
+</script>

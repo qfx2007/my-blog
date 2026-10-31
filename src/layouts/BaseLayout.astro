@@ -5,6 +5,7 @@ import BlogTopNav from '../components/blog/BlogTopNav.astro';
 import ScrollToTopButton from '../components/ScrollToTopButton.astro';
 import { getSiteConfig } from '../data/site';
 import { getHtmlLang } from '../utils/ui-text';
+import AmbientEffects from '../components/AmbientEffects.astro';
 
 interface Props {
   title: string;
@@ -25,6 +26,7 @@ const htmlLang = getHtmlLang(siteConfig);
     <BlogTopNav />
   </Fragment>
   <slot />
+  <AmbientEffects />
   <Fragment slot="after-content">
     <ScrollToTopButton />
   </Fragment>

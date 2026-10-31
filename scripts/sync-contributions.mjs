@@ -79,7 +79,18 @@ async function gitee() {
 
 const output = 'public/contributions.json';
 try {
-  const [gh, gt] = await Promise.all([github(), gitee()]);
+  let gh = empty();
+  let gt = empty();
+  try {
+    gh = await github();
+  } catch (e) {
+    console.warn('GitHub sync failed:', e.message);
+  }
+  try {
+    gt = await gitee();
+  } catch (e) {
+    console.warn('Gitee sync failed:', e.message);
+  }
   const contributions = Object.fromEntries(
     Object.keys(gh).map((date) => [date, gh[date] + gt[date]]),
   );

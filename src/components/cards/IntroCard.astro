@@ -25,7 +25,7 @@ const { intro, quote } = Astro.props as { intro: Intro; quote?: Quote };
       <em>{intro.name}</em>
     </h2>
     {quote && (
-      <blockquote>
+      <blockquote data-typewriter aria-label={quote.text.join(' ')}>
         <span>- {quote.text.slice(0, 2).join(' ')}</span>
         <span>{quote.text.slice(2).join(' ')}</span>
       </blockquote>
