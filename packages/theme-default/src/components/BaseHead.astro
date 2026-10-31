@@ -111,6 +111,17 @@ html:root{--font-config-en:${enFamily};--font-config-code:${codeFamily};--font-c
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style is:inline set:html={fontVariablesCss}></style>
 <ClientRouter />
+<style is:global>
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-new(root) {
+    z-index: 1;
+  }
+</style>
 <script is:inline>
   (() => {
     const storageKey = 'navfolio-theme';
@@ -153,9 +164,51 @@ html:root{--font-config-en:${enFamily};--font-config-code:${codeFamily};--font-c
     applyTheme(storedTheme() || systemTheme(), false);
 
     if (!window.__navfolioTheme) {
+      let transitioning = false;
       window.__navfolioTheme = {
-        toggle() {
-          applyTheme(root.dataset.theme === 'dark' ? 'light' : 'dark');
+        toggle(button) {
+          if (transitioning) return;
+          const nextTheme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+          if (
+            !button ||
+            !document.startViewTransition ||
+            window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+          ) {
+            applyTheme(nextTheme);
+            return;
+          }
+
+          const bounds = button.getBoundingClientRect();
+          const x = bounds.left + bounds.width / 2;
+          const y = bounds.top + bounds.height / 2;
+          const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+          transitioning = true;
+          try {
+            const transition = document.startViewTransition(() => applyTheme(nextTheme));
+            transition.ready
+              .then(() => {
+                document.documentElement.animate(
+                  {
+                    clipPath: [
+                      `circle(0px at ${x}px ${y}px)`,
+                      `circle(${radius}px at ${x}px ${y}px)`,
+                    ],
+                  },
+                  {
+                    duration: 400,
+                    easing: 'ease-in-out',
+                    pseudoElement: '::view-transition-new(root)',
+                  },
+                );
+              })
+              .catch(() => {});
+            transition.finished.finally(() => {
+              transitioning = false;
+            });
+          } catch {
+            transitioning = false;
+            applyTheme(nextTheme);
+          }
         },
       };
     }
@@ -169,7 +222,7 @@ html:root{--font-config-en:${enFamily};--font-config-code:${codeFamily};--font-c
 
     document.addEventListener('click', (event) => {
       const toggle = event.target.closest?.('[data-theme-toggle]');
-      if (toggle) window.__navfolioTheme.toggle();
+      if (toggle) window.__navfolioTheme.toggle(toggle);
     });
 
     document.addEventListener('DOMContentLoaded', syncThemeControls, { once: true });
