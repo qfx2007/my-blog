@@ -1,310 +1,420 @@
 ---
-// 关于页职业技能环形图：每片独立色（oklch 默认色相按索引均分，可用 item.color 覆盖）。
-// 构建时生成骨架、客户端绘制 SVG 弧；无 JS 时仍有隐藏摘要列表可读。
 interface SkillItem {
   name: string;
   value: number;
+  category: '语言' | '技术栈' | '工具和其他';
   color?: string;
+  tools?: string[];
 }
-
 interface Props {
   items: SkillItem[];
 }
-
 const { items } = Astro.props;
+const colors = [
+  '#f8f1b4',
+  '#fbe2b0',
+  '#f7cba0',
+  '#efd9b8',
+  '#d7edc7',
+  '#c5e8b8',
+  '#b9e4d4',
+  '#c0e6f4',
+  '#b5d8f0',
+  '#c9cbed',
+  '#e2c9e6',
+  '#f6cde2',
+  '#f3d9c7',
+  '#eae2c7',
+  '#d2e9d3',
+  '#c8e6ef',
+  '#dbecc0',
+  '#f4e9b8',
+  '#eadfbf',
+  '#c7e3d1',
+  '#d5f1de',
+  '#bde4f5',
+  '#d9d2f3',
+  '#f2e2d0',
+  '#e1f2c5',
+];
+const grouped = items.reduce<Record<string, SkillItem[]>>((acc, item) => {
+  (acc[item.category] ||= []).push(item);
+  return acc;
+}, {});
 ---
 
-<div class="skill-pie" data-skill-pie data-items={JSON.stringify(items)}></div>
-<ul class="skill-pie__sr-only" aria-label="技能分布摘要">
-  {items.map((item) => (
-    <li>
-      {item.name}：{item.value}
-    </li>
-  ))}
-</ul>
-
+<section
+  class="skill-widget"
+  data-skill-widget
+  data-items={JSON.stringify(items)}
+  data-colors={JSON.stringify(colors)}
+>
+  <div class="skill-widget__main">
+    <div class="skill-widget__chart" data-chart>
+      <!-- donut svg injected by script -->
+    </div>
+    <div class="skill-widget__rows" data-rows>
+      {Object.entries(grouped).map(([category, list]) => {
+        const chips = list.flatMap((item) =>
+          (item.tools || [item.name]).map((name) => (
+            <span
+              key={`${category}-${name}`}
+              class="skill-pill"
+              style={`--skill-color:${item.color || colors[items.indexOf(item) % colors.length]}`}
+              data-skill-name={name}
+            >
+              {name} <i>{item.tools ? '+++' : '+'.repeat(item.value)}</i>
+            </span>
+          )),
+        );
+        return (
+          <div class="skill-row" data-category={category}>
+            <span class="skill-row__head">
+              {category === '语言' && (
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="8 6 3 12 8 18" />
+                  <polyline points="16 6 21 12 16 18" />
+                </svg>
+              )}
+              {category === '技术栈' && (
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                  <polyline points="2 17 12 22 22 17" />
+                  <polyline points="2 12 12 17 22 12" />
+                </svg>
+              )}
+              {category === '工具和其他' && (
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                  <line x1="12" y1="22.08" x2="12" y2="12" />
+                </svg>
+              )}
+              <b>{category}:</b>
+            </span>
+            <div class="skill-row__chips">
+              <div class="skill-row__track">
+                <div class="skill-row__group">{chips}</div>
+                <div class="skill-row__group" aria-hidden="true">
+                  {chips}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
 <script>
-  const setup = () => {
-    document.querySelectorAll<HTMLElement>('[data-skill-pie]').forEach((host) => {
+  const setup = () =>
+    document.querySelectorAll<HTMLElement>('[data-skill-widget]').forEach((host) => {
       if (host.dataset.wired) return;
       host.dataset.wired = 'true';
-
       const items = JSON.parse(host.dataset.items || '[]') as {
-        name: string;
-        value: number;
-        color?: string;
-      }[];
-      const total = items.reduce((s, i) => s + i.value, 0) || 1;
-
-      const size = 620;
-      const height = 360;
-      const cx = size / 2;
-      const cy = height / 2;
-      const outer = 118;
-      const inner = 70;
-      const labelRadius = outer + 16;
-      const labelMinY = 14;
-      const labelMaxY = height - 14;
-      const labelGap = 13;
-
-      const hueFor = (index: number) => Math.round((index * 360) / Math.max(items.length, 1));
-      const colorFor = (index: number) => items[index].color || `oklch(70% 0.075 ${hueFor(index)})`;
-
-      const polar = (r: number, a: number) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-
-      const arcPath = (start: number, end: number) => {
-        const [x1, y1] = polar(outer, start);
-        const [x2, y2] = polar(outer, end);
-        const [x3, y3] = polar(inner, end);
-        const [x4, y4] = polar(inner, start);
-        const large = end - start > Math.PI ? 1 : 0;
-        return (
-          `M ${x1.toFixed(2)} ${y1.toFixed(2)} ` +
-          `A ${outer} ${outer} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} ` +
-          `L ${x3.toFixed(2)} ${y3.toFixed(2)} ` +
-          `A ${inner} ${inner} 0 ${large} 0 ${x4.toFixed(2)} ${y4.toFixed(2)} Z`
-        );
-      };
-
-      const svgNS = 'http://www.w3.org/2000/svg';
-      const svg = document.createElementNS(svgNS, 'svg');
-      svg.setAttribute('class', 'skill-pie__svg');
-      svg.setAttribute('viewBox', `0 0 ${size} ${height}`);
+          name: string;
+          value: number;
+          category: string;
+          color?: string;
+          tools?: string[];
+        }[],
+        colors = JSON.parse(host.dataset.colors || '[]') as string[],
+        total = items.reduce((s, i) => s + i.value, 0) || 1,
+        size = 360,
+        c = 180,
+        o = 160,
+        inn = 92,
+        ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
       svg.setAttribute('role', 'img');
-      svg.setAttribute(
-        'aria-label',
-        `职业技能分布环形图，共 ${items.length} 项，按熟练度从高到低排列`,
-      );
-
-      type LabelInfo = {
-        g: SVGGElement;
-        text: SVGTextElement;
-        line: SVGPathElement;
-        color: string;
-        side: 'left' | 'right';
-        y: number;
-        x: number;
-      };
-      const labels: LabelInfo[] = [];
-
+      svg.setAttribute('aria-label', '职业技能分布');
+      const centerMain = document.createElementNS(ns, 'text');
+      centerMain.setAttribute('x', String(c));
+      centerMain.setAttribute('y', String(c - 4));
+      centerMain.setAttribute('text-anchor', 'middle');
+      centerMain.setAttribute('class', 'pie-center-main');
+      centerMain.textContent = `${items.length}+`;
+      const centerSub = document.createElementNS(ns, 'text');
+      centerSub.setAttribute('x', String(c));
+      centerSub.setAttribute('y', String(c + 30));
+      centerSub.setAttribute('text-anchor', 'middle');
+      centerSub.setAttribute('class', 'pie-center-sub');
+      centerSub.textContent = '技术技能';
+      svg.appendChild(centerMain);
+      svg.appendChild(centerSub);
+      const polar = (r: number, a: number) => [c + r * Math.cos(a), c + r * Math.sin(a)],
+        path = (a: number, b: number) => {
+          const [x1, y1] = polar(o, a),
+            [x2, y2] = polar(o, b),
+            [x3, y3] = polar(inn, b),
+            [x4, y4] = polar(inn, a),
+            l = b - a > Math.PI ? 1 : 0;
+          return `M${x1} ${y1}A${o} ${o} 0 ${l} 1 ${x2} ${y2}L${x3} ${y3}A${inn} ${inn} 0 ${l} 0 ${x4} ${y4}Z`;
+        },
+        profWord = (v: number) => ['了解', '熟悉', '熟练'][v - 1] ?? '了解';
       let angle = -Math.PI / 2;
-      items.forEach((item, index) => {
-        const sweep = (item.value / total) * Math.PI * 2;
-        const start = angle;
-        const end = angle + sweep;
+      const sliceEls: SVGGElement[] = [];
+      let selected = -1;
+      const isChipActive = (el: HTMLElement) =>
+        selected >= 0 &&
+        (el.dataset.skillName === items[selected].name ||
+          (items[selected].tools || []).includes(el.dataset.skillName || ''));
+      const select = (i: number) => {
+        selected = selected === i ? -1 : i;
+        host.classList.toggle('has-selection', selected >= 0);
+        sliceEls.forEach((g, j) => g.classList.toggle('is-selected', j === selected));
+        host
+          .querySelectorAll<HTMLElement>('[data-skill-name]')
+          .forEach((el) => el.classList.toggle('is-active', isChipActive(el)));
+        if (selected < 0) {
+          centerMain.textContent = `${items.length}+`;
+          centerMain.style.fontSize = '';
+          centerSub.textContent = '技术技能';
+        } else {
+          const item = items[selected],
+            pct = ((item.value / total) * 100).toFixed(1);
+          centerMain.textContent = item.name;
+          centerMain.style.fontSize = '22px';
+          centerSub.textContent = `${profWord(item.value)}·${pct}%`;
+        }
+      };
+      items.forEach((item, i) => {
+        const sweep = (item.value / total) * Math.PI * 2,
+          start = angle,
+          end = angle + sweep,
+          mid = (start + end) / 2;
         angle = end;
-        const mid = start + sweep / 2;
-
-        const color = colorFor(index);
-        const [dx, dy] = [Math.cos(mid), Math.sin(mid)];
-
-        const g = document.createElementNS(svgNS, 'g');
-        g.setAttribute('class', 'skill-pie__slice-group');
-        g.dataset.name = item.name;
-        g.style.setProperty('--explode-x', `${(dx * 12).toFixed(2)}px`);
-        g.style.setProperty('--explode-y', `${(dy * 12).toFixed(2)}px`);
-        g.style.setProperty('--slice-color', color);
-
-        const path = document.createElementNS(svgNS, 'path');
-        path.setAttribute('class', 'skill-pie__slice');
-        path.setAttribute('d', arcPath(start, end));
-
-        const title = document.createElementNS(svgNS, 'title');
-        title.textContent = `${item.name} · ${item.value}`;
-        path.appendChild(title);
-        g.appendChild(path);
-
-        // 标签：放在扇区弧线外侧
-        const text = document.createElementNS(svgNS, 'text');
-        text.setAttribute('class', 'skill-pie__label');
-        text.setAttribute('dominant-baseline', 'middle');
-        text.textContent = item.name;
-
-        const line = document.createElementNS(svgNS, 'path');
-        line.setAttribute('class', 'skill-pie__label-line');
-        g.appendChild(line);
-        g.appendChild(text);
+        const g = document.createElementNS(ns, 'g'),
+          p = document.createElementNS(ns, 'path');
+        g.classList.add('skill-slice');
+        g.style.setProperty('--explode-x', `${Math.cos(mid) * 14}px`);
+        g.style.setProperty('--explode-y', `${Math.sin(mid) * 14}px`);
+        p.setAttribute('d', path(start, end));
+        p.style.fill = item.color || colors[i % colors.length];
+        p.setAttribute('tabindex', '0');
+        p.setAttribute('role', 'button');
+        p.setAttribute('aria-label', `${item.name}，${item.category}`);
+        g.appendChild(p);
         svg.appendChild(g);
-
-        const [ex, ey] = polar(labelRadius, mid);
-        labels.push({
-          g,
-          text,
-          line,
-          color,
-          side: dx >= 0 ? 'right' : 'left',
-          y: ey,
-          x: ex,
+        sliceEls.push(g);
+        g.addEventListener('click', () => select(i));
+        g.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            select(i);
+          }
         });
-
-        const toggle = () => g.classList.toggle('is-selected');
-        path.addEventListener('click', toggle);
-        path.addEventListener('mouseenter', () => g.classList.add('is-hover'));
-        path.addEventListener('mouseleave', () => g.classList.remove('is-hover'));
       });
-
-      // 标签防重叠：左右两侧各自按 y 排序后按最小间距推开
-      for (const side of ['right', 'left'] as const) {
-        const group = labels.filter((l) => l.side === side).sort((a, b) => a.y - b.y);
-        if (!group.length) continue;
-
-        const gap = Math.min(labelGap, (labelMaxY - labelMinY) / Math.max(1, group.length - 1));
-        let prev = labelMinY - gap;
-        for (const l of group) {
-          l.y = Math.max(l.y, prev + gap);
-          prev = l.y;
-        }
-        let next = labelMaxY + gap;
-        for (let i = group.length - 1; i >= 0; i--) {
-          group[i].y = Math.min(group[i].y, next - gap);
-          next = group[i].y;
-        }
-      }
-
-      for (const l of labels) {
-        const dir = l.side === 'right' ? 1 : -1;
-        const anchorX = cx + dir * (outer + 6);
-        const endX = cx + dir * (outer + 24);
-        l.line.setAttribute(
-          'd',
-          `M ${anchorX.toFixed(2)} ${l.y.toFixed(2)} L ${endX.toFixed(2)} ${l.y.toFixed(2)}`,
-        );
-        l.text.setAttribute('x', (endX + dir * 5).toFixed(2));
-        l.text.setAttribute('y', l.y.toFixed(2));
-        l.text.setAttribute('text-anchor', l.side === 'right' ? 'start' : 'end');
-        l.text.style.fill = l.color;
-        l.line.style.stroke = l.color;
-      }
-
-      host.appendChild(svg);
+      host.querySelectorAll<HTMLElement>('[data-skill-name]').forEach((el) => {
+        el.addEventListener('click', () => {
+          const idx = items.findIndex(
+            (it) =>
+              it.name === el.dataset.skillName ||
+              (it.tools || []).includes(el.dataset.skillName || ''),
+          );
+          if (idx >= 0) select(idx);
+        });
+      });
+      host.querySelector('[data-chart]')?.appendChild(svg);
     });
-  };
-
   setup();
   document.addEventListener('astro:page-load', setup);
 </script>
-
 <style>
-  .skill-pie {
-    display: flex;
-    justify-content: center;
-    margin: 1.5rem 0 2rem;
+  .skill-widget {
+    display: grid;
+    gap: 12px;
+    margin: 6px 0 10px;
   }
-
-  .skill-pie__svg {
+  .skill-widget__main {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px 22px;
+    align-items: center;
+  }
+  .skill-widget__chart {
+    width: 236px;
+    min-width: 0;
+    justify-self: start;
+  }
+  .skill-widget__chart svg {
+    display: block;
     width: 100%;
-    max-width: 38rem;
     height: auto;
-    max-height: 26rem;
-    animation: pie-fade-in 640ms ease both;
+    overflow: visible;
   }
-
-  .skill-pie__slice-group {
-    transition: transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  .pie-center-main {
+    font-family: var(--font-heading);
+    font-size: 44px;
+    font-weight: 700;
+    fill: var(--paper-ink);
   }
-
-  .skill-pie__slice-group.is-hover {
-    transform: scale(1.035);
-    transform-box: view-box;
-    transform-origin: center;
+  .pie-center-sub {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    fill: var(--paper-ink-soft);
   }
-
-  .skill-pie__slice-group.is-selected {
-    transform: translate(var(--explode-x, 0), var(--explode-y, 0));
+  .skill-widget__rows {
+    display: grid;
+    gap: 11px;
+    min-width: 0;
   }
-
-  .skill-pie__slice-group.is-hover.is-selected {
-    transform: translate(var(--explode-x, 0), var(--explode-y, 0)) scale(1.035);
+  .skill-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
   }
-
-  .skill-pie__slice {
-    fill: var(--slice-color, var(--paper-accent));
-    stroke: var(--paper-surface);
-    stroke-width: 2;
-    stroke-linejoin: round;
+  .skill-row__head {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    color: var(--paper-ink);
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .skill-row__head b {
+    font-weight: 650;
+  }
+  .skill-row__head svg {
+    width: 17px;
+    height: 17px;
+    flex: none;
+    color: var(--paper-accent);
+  }
+  .skill-row__chips {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    padding: 3px 0;
+  }
+  .skill-row__track {
+    display: flex;
+    width: max-content;
+    animation: skill-marquee 28s linear infinite;
+  }
+  .skill-row__group {
+    display: flex;
+    flex: none;
+    gap: 8px;
+    padding-right: 8px;
+  }
+  .skill-row:hover .skill-row__track {
+    animation-play-state: paused;
+  }
+  @keyframes skill-marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .skill-pill {
+    flex: none;
+    border: 1px solid color-mix(in srgb, var(--skill-color) 38%, transparent);
+    background: color-mix(in srgb, var(--skill-color) 9%, transparent);
+    color: color-mix(in srgb, var(--skill-color) 78%, var(--paper-ink));
+    border-radius: 999px;
+    padding: 3px 11px;
+    font-size: 0.74rem;
+    line-height: 1.5;
+    white-space: nowrap;
     cursor: pointer;
     transition:
-      filter 220ms ease,
-      opacity 220ms ease;
+      background 0.28s ease,
+      color 0.28s ease,
+      border-color 0.28s ease,
+      transform 0.28s ease;
   }
-
-  /* 悬停时其余扇区变淡，突出当前项 */
-  .skill-pie__svg:has(.skill-pie__slice-group.is-hover)
-    .skill-pie__slice-group:not(.is-hover)
-    .skill-pie__slice {
-    opacity: 0.4;
-  }
-
-  .skill-pie__slice-group.is-hover .skill-pie__slice {
-    filter: brightness(1.1);
-  }
-
-  .skill-pie__label-line {
-    fill: none;
-    stroke-width: 1;
-    stroke-linecap: round;
-    opacity: 0.75;
-    pointer-events: none;
-    transition: opacity 220ms ease;
-  }
-
-  .skill-pie__label {
-    font-family: var(--font-body);
-    font-size: 10px;
-    letter-spacing: 0.01em;
-    pointer-events: none;
-    transition:
-      fill 220ms ease,
-      opacity 220ms ease;
-  }
-
-  .skill-pie__slice-group.is-hover .skill-pie__label,
-  .skill-pie__slice-group.is-selected .skill-pie__label {
+  .skill-pill i {
+    font-style: normal;
     font-weight: 700;
+    margin-left: 2px;
+    color: var(--skill-color);
+    font-size: 0.7rem;
   }
-
-  .skill-pie__slice-group.is-selected .skill-pie__label-line {
-    opacity: 1;
+  .skill-pill:hover {
+    border-color: color-mix(in srgb, var(--skill-color) 70%, transparent);
   }
-
-  .skill-pie__sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+  .skill-pill.is-active {
+    background: var(--skill-color);
+    border-color: var(--skill-color);
+    color: var(--paper-surface);
+    transform: translateY(-1px);
   }
-
-  @keyframes pie-fade-in {
-    from {
-      opacity: 0;
-      transform: scale(0.96);
+  .skill-pill.is-active i {
+    color: var(--paper-surface);
+    opacity: 0.85;
+  }
+  .skill-slice {
+    transform: translate(0, 0);
+    transform-origin: 180px 180px;
+    transition: transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .skill-slice path {
+    stroke: var(--paper-surface);
+    stroke-width: 2;
+    cursor: pointer;
+    transition:
+      filter 0.3s ease,
+      opacity 0.3s ease;
+  }
+  .skill-slice.is-selected {
+    transform: translate(var(--explode-x), var(--explode-y));
+  }
+  .skill-widget.has-selection .skill-slice:not(.is-selected) path {
+    opacity: 0.42;
+  }
+  .skill-slice.is-selected path {
+    filter: drop-shadow(0 3px 7px rgba(60, 45, 30, 0.28));
+  }
+  @media (max-width: 560px) {
+    .skill-widget__main {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      gap: 14px;
     }
-    to {
-      opacity: 1;
-      transform: scale(1);
+    .skill-widget__chart {
+      justify-self: center;
+      width: 210px;
+    }
+    .skill-widget__rows {
+      width: 100%;
+      justify-self: stretch;
     }
   }
-
-  @media (max-width: 640px) {
-    .skill-pie__label {
-      font-size: 9px;
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .skill-pie__svg {
-      animation: none;
-    }
-    .skill-pie__slice-group,
-    .skill-pie__slice,
-    .skill-pie__label,
-    .skill-pie__label-line {
+    .skill-slice,
+    .skill-slice path,
+    .skill-pill {
       transition: none;
+    }
+    .skill-row__track {
+      animation: none;
     }
   }
 </style>

@@ -19,3 +19,114 @@ const { Content, headings } = await render(about);
 >
   <Content />
 </BlogArticle>
+
+<style is:global>
+  /* 关于我 + 技能能力：PC 双栏 / 手机单栏 / 平板按宽度自适应 */
+  .about-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 8px 44px;
+    align-items: start;
+    margin: 6px 0 30px;
+  }
+  .about-layout > * {
+    min-width: 0;
+  }
+  @media (max-width: 760px) {
+    .about-layout {
+      grid-template-columns: 1fr;
+      gap: 26px;
+    }
+  }
+
+  /* 标题左侧棕色竖线 */
+  .about-layout .section-title {
+    position: relative;
+    margin: 0 0 14px;
+    padding-left: 15px;
+    color: var(--paper-ink);
+    font-family: var(--font-page-heading);
+    font-size: 1.35rem;
+    font-weight: 400;
+    line-height: 1.2;
+  }
+  .about-layout .section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.14em;
+    bottom: 0.14em;
+    width: 4px;
+    border-radius: 2px;
+    background: var(--paper-accent);
+  }
+  .about-layout .about-layout__intro > p {
+    margin: 0 0 0;
+  }
+  .skill-legend {
+    margin: -8px 0 2px;
+    color: var(--paper-ink-soft);
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  /* 「关于我」底部引用：浅米色圆角背景 */
+  .about-quote {
+    position: relative;
+    margin: 20px 0 0;
+    padding: 18px 18px 18px 42px;
+    border: 1px solid color-mix(in srgb, var(--paper-accent) 22%, transparent);
+    border-radius: 12px;
+    background: var(--paper-accent-soft);
+    color: var(--paper-ink);
+    font-size: 1.02rem;
+    line-height: 1.75;
+  }
+  .about-quote::before {
+    content: '\201C';
+    position: absolute;
+    top: 8px;
+    left: 15px;
+    font-family: var(--font-heading);
+    font-size: 2.4rem;
+    line-height: 1;
+    color: color-mix(in srgb, var(--paper-accent) 55%, transparent);
+  }
+
+  /* 「关于我」折叠：PC/平板默认展开成普通标题，手机端可收起 / 展开 */
+  .intro-collapse {
+    margin: 0;
+  }
+  .intro-collapse > summary {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    pointer-events: none;
+  }
+  .intro-collapse > summary::-webkit-details-marker {
+    display: none;
+  }
+  .intro-collapse__chevron {
+    display: none;
+    width: 9px;
+    height: 9px;
+    flex: none;
+    margin-left: auto;
+    border-right: 2px solid var(--paper-accent);
+    border-bottom: 2px solid var(--paper-accent);
+    transform: rotate(45deg);
+    transition: transform 0.25s ease;
+  }
+  .intro-collapse:not([open]) .intro-collapse__chevron {
+    transform: rotate(-45deg);
+  }
+  @media (max-width: 560px) {
+    .intro-collapse > summary {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .intro-collapse__chevron {
+      display: inline-block;
+    }
+  }
+</style>
