@@ -1,7 +1,7 @@
 ---
 title: '让机器人替我管依赖：Dependabot 自动升级实践与思考'
 description: 'Dependabot 是 GitHub 平台内置的依赖管理服务。本文记录如何通过配置启用它，以及这套机制背后的原理、好处与规范化价值。'
-date: '2026-10-30'
+date: '2026-10-19'
 draft: false
 tags:
   - 依赖管理
@@ -89,9 +89,9 @@ Bump the production-dependencies group with .... updates
 
 它把依赖管理从一件靠人记、靠自觉的事，变成了一个有节奏、有记录、可追溯的系统流程。
 
-**符合 SemVer 的升级节奏。** Dependabot 在 PR 里会标注每个升级的类型：patch、minor 还是 major。SemVer 的约定是 major 可能包含 breaking change，minor 和 patch 理论上兼容。这意味着你只需要重点看 major 升级，patch 和 minor 可以快速放行。本站那次 13 个更新里，`@astrojs/mdx` 从 7 跳到 8、`mermaid` 从 11 跳到 12，都是 major——这提醒我合并后必须跑构建验证，而不是无脑点 Merge。
+**符合 SemVer 的升级节奏。** Dependabot 在发起 PR 时会直接注明依赖版本“由几变成了几”。根据 SemVer 的约定，如果只是小版本的修补（比如 8.72.0 变成 8.72.1），理论上都是兼容的，可以快速放行；但如果跨度特别大，跨越了主版本号，就极有可能包含破坏性变更。这就提醒我，面对这种大跨度更新，合并后绝不能“无脑点 Merge”，必须跑一遍完整的构建验证才算稳妥。
 
-**符合“小步快跑”的工程原则。** 如果半年不升级，打开 `package.json` 会发现一堆依赖跨了好几个大版本，逐个验证的成本高到让人想放弃。每周小步升级，每次只动几个版本号，验证面很小，出问题也容易定位。
+**符合“小步快跑”的工程原则。** 如果项目依赖经常不升级，之后想升级一个包，结果发现它依赖的另一个包也得升，另一个包又依赖别的……最后带来的成本较高。每周小步升级，每次只动几个版本号，验证面很小，出问题也容易定位。
 
 **符合“关注点分离”的协作习惯。** Dependabot 的 PR 只改 `package.json` 和 `bun.lock` 两个文件，零业务代码改动。review 成本极低，回滚也干净——`git revert` 一下就行，不牵扯任何逻辑。
 
@@ -109,7 +109,7 @@ Dependabot 的机制并不神秘，拆开看就三件事：
 
 GitHub 把这三件事做成了托管服务，所以你什么都不用写。但同样的逻辑，你完全可以自己在非 GitHub 环境里复现。
 
-**思路一：用现成的开源替代品。** 最知名的是 [Renovate](https://docs.renovatebot.com/)，它支持的平台比 Dependabot 更广——GitLab、Bitbucket、Gitea 都能用。核心逻辑一模一样：读配置、扫依赖、开 MR/PR。如果你从 GitHub 迁移到 GitLab，在项目根目录放一个 `renovate.json`，接上 CI 就能获得几乎相同的体验。
+**思路一：用现成的开源替代品。** 比如 [Renovate](https://docs.renovatebot.com/)，它支持的平台比 Dependabot 更广——GitLab、Bitbucket、Gitea 都能用。核心逻辑一模一样：读配置、扫依赖、开 MR/PR。如果你从 GitHub 迁移到 GitLab，在项目根目录放一个 `renovate.json`，接上 CI 就能获得几乎相同的体验。
 
 **思路二：自己写一个最小实现。** 如果你只用 CI 而不想引入第三方服务，在 CI 配置里加一个定时任务即可。伪代码大概长这样：
 
@@ -127,20 +127,7 @@ update-deps:
 
 关键是最后一步：需要调用平台 API 创建 MR，并附上版本变更信息。没有 Dependabot 那么精致（不会自动抓 changelog、不会分组、不会标注 SemVer 类型），但“自动化发现 + 人工审核合并”的核心流程是跑通的。
 
-**思路三：接受“半自动”。** 不追求自动开 PR，只追求自动提醒。在 CI 里加一个步骤，每次 push 时跑 `bun outdated` 或 `npm outdated`，有更新就在日志里高亮输出。虽然没有 PR 那么方便，但至少解决了“不知道有新版本”的问题。
-
-三种方式的共同点在于：**自动化的价值不在于“自动合并”，而在于“自动发现”。** 合并永远需要人来判断，因为工具不知道你的项目会不会被 breaking change 弄坏。
-
-## 五、回到我的使用方式
-
----
-
-经过这段时间的使用，我固定下来一个节奏：
-
-- **发现**交给 Dependabot，每周自动开 PR。
-- **判断**由我来做：看一眼 PR 里的版本表，重点关注 major 升级的 changelog，确认没有影响本站用到的 API。
-- **验证**在本地跑：`bun install` → `bun run format:check` → `bun run build`，构建通过就合并。
-- **收尾**是合并后如果有格式变化，单独补一个提交，不让格式调整混进业务 diff 里。
+## 五、总结与思考
 
 这套分工跑下来，依赖更新既不会拖延，也不会出事。Dependabot 比我勤快，但它不会替我做决定——自动化负责发现，人负责判断和收尾，这个边界保持住，工具才真正有用。
 
@@ -148,8 +135,6 @@ update-deps:
 
 ---
 
-- [GitHub Docs: Dependabot 版本更新配置选项](https://docs.github.com/zh/code-security/dependabot/dependabot-version-updates/configuration-options-for-dependabot-version-updates)
-- [GitHub Docs: 使用 groups 优化 Dependabot PR 创建](https://docs.github.com/zh/code-security/dependabot/dependabot-version-updates/grouping-dependency-updates)
-- [GitHub Docs: Dependabot 支持的生态列表（含 Bun）](https://docs.github.com/zh/code-security/dependabot/troubleshooting-dependabot/troubleshooting-detection-of-vulnerable-dependencies)
+- [关于 Dependabot 版本更新配置选项](https://docs.github.com/zh/code-security/reference/supply-chain-security/dependabot-options-reference)
 - [Semantic Versioning](https://semver.org/lang/zh-CN/)
 - [Renovate 文档](https://docs.renovatebot.com/)
