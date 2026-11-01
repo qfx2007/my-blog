@@ -11,7 +11,6 @@ interface Props {
   excludeDraft?: boolean;
   totalPostsBase?: number;
   activeDaysBase?: number;
-  dayStreakBase?: number;
 }
 
 const {
@@ -20,9 +19,10 @@ const {
   excludeDraft = true,
   totalPostsBase = 0,
   activeDaysBase = 0,
-  dayStreakBase = 0,
 } = Astro.props;
 const posts = await getCollection('blog', ({ data }) => !excludeDraft || !data.draft);
+const projects = await getCollection('projects', ({ id, data }) => id !== 'index' && !data.draft);
+const projectCount = projects.length;
 const heatmap = createRecentBlogHeatmap(posts, latestCount);
 const ui = getUiText(await getSiteConfig());
 const formatDate = new Intl.DateTimeFormat(ui.locale, {
@@ -35,16 +35,16 @@ const formatDate = new Intl.DateTimeFormat(ui.locale, {
 <article class="glass-card heatmap-card">
   <div class="stats-row">
     <div class="stat-item">
+      <strong>{projectCount}</strong>
+      <span>{ui.heatmap.projectCount}</span>
+    </div>
+    <div class="stat-item">
       <strong>{heatmap.totalPosts + totalPostsBase}</strong>
       <span>{ui.heatmap.totalPosts}</span>
     </div>
     <div class="stat-item">
       <strong>{heatmap.activeDays + activeDaysBase}</strong>
       <span>{ui.heatmap.activeDays}</span>
-    </div>
-    <div class="stat-item">
-      <strong>{heatmap.currentStreak + dayStreakBase}</strong>
-      <span>{ui.heatmap.dayStreak}</span>
     </div>
   </div>
 

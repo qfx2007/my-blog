@@ -428,7 +428,6 @@ const siteConfig = defineCollection({
           excludeDraft: z.boolean().optional().default(true),
           totalPostsBase: z.number().int().min(0).optional().default(0),
           activeDaysBase: z.number().int().min(0).optional().default(0),
-          dayStreakBase: z.number().int().min(0).optional().default(0),
         })
         .optional()
         .default({
@@ -437,7 +436,6 @@ const siteConfig = defineCollection({
           excludeDraft: true,
           totalPostsBase: 0,
           activeDaysBase: 0,
-          dayStreakBase: 0,
         }),
       navigation: z.array(navigationItemSchema),
       links: z.array(homeLinkSchema).optional().default([]),

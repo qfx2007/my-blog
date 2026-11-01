@@ -7,7 +7,7 @@
   "heatmap": {
     "totalPosts": "Total posts",
     "activeDays": "Active days",
-    "dayStreak": "Day streak",
+    "projectCount": "Projects",
     "latest": "Latest",
     "latestPublishedPosts": "Latest published posts",
     "openLatestPost": "Open latest post: {title}"

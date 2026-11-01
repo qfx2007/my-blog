@@ -7,7 +7,7 @@
   "heatmap": {
     "totalPosts": "总文章",
     "activeDays": "活跃天数",
-    "dayStreak": "连续天数",
+    "projectCount": "作品数量",
     "latest": "最新",
     "latestPublishedPosts": "最新发布文章",
     "openLatestPost": "打开最新文章：{title}"

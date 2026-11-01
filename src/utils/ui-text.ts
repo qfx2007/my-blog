@@ -26,7 +26,7 @@ type RawUiText = {
   heatmap: {
     totalPosts: string;
     activeDays: string;
-    dayStreak: string;
+    projectCount: string;
     latest: string;
     latestPublishedPosts: string;
     openLatestPost: Message;
