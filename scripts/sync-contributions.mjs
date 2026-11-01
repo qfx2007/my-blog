@@ -35,7 +35,10 @@ async function github() {
   });
   if (!response.ok) throw new Error(`GitHub API ${response.status}`);
   const body = await response.json();
-  if (body.errors || !body.data?.user) throw new Error('GitHub contribution calendar unavailable');
+  if (body.errors || !body.data?.user) {
+    const detail = body.errors?.map((error) => error.message).join('; ') || 'user not found';
+    throw new Error(`GitHub contribution calendar unavailable: ${detail}`);
+  }
   const result = empty();
   for (const week of body.data.user.contributionsCollection.contributionCalendar.weeks)
     for (const day of week.contributionDays)
@@ -79,18 +82,8 @@ async function gitee() {
 
 const output = 'public/contributions.json';
 try {
-  let gh = empty();
-  let gt = empty();
-  try {
-    gh = await github();
-  } catch (e) {
-    console.warn('GitHub sync failed:', e.message);
-  }
-  try {
-    gt = await gitee();
-  } catch (e) {
-    console.warn('Gitee sync failed:', e.message);
-  }
+  const gh = await github();
+  const gt = await gitee();
   const contributions = Object.fromEntries(
     Object.keys(gh).map((date) => [date, gh[date] + gt[date]]),
   );
