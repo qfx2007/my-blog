@@ -20,25 +20,23 @@ sidebar:
 
 依赖更新这件事，手动做很容易拖延——每个包都要自己查有没有新版本、有没有安全漏洞，几十个依赖根本盯不过来。但如果你仔细翻过 GitHub 的仓库设置，会发现有一个叫 **Dependabot** 的东西，它是 GitHub 平台自带的、不需要额外付费就能用的依赖管理服务。
 
-这篇文章记录了我发现并使用它的过程：从“这啥？”到“真香”，再到把它当成工程规范的一部分。
+这篇文章记录了我发现并使用它的过程：从“这啥？”到“真香”，再到认识到了这种自动化工具对日常开发的帮助、慢慢把它变成了自己项目里常驻的习惯。
 
 ## 一、它到底是什么
 
 ---
 
-先说一个容易误解的点。当时我发现远程仓库上突然多出来一个不认识的分支，名字类似 `dependabot/bun/production-dependencies-xxx`，但我自己并没有创建过它。一开始我以为这是我项目当中使用过的一个开源项目 [astro-navfolio](https://github.com/dodolalorc/astro-navfolio) 的作者专门写了什么自动脚本，后来查了 GitHub 官方文档才搞清楚：
+先说一个容易误解的点。当时我发现远程仓库上突然多出来俩个不认识的分支，名字类似 `dependabot/bun/production-dependencies-xxx`，但我自己并没有创建过它，起初还以为是 Fork 的上游仓库自带的，后来查了资料才弄清楚：
 
 **Dependabot 是 GitHub 平台内置的依赖管理服务，适用于 GitHub 上的所有仓库。** 你不需要在项目里写任何执行代码，只要仓库里存在 `.github/dependabot.yml` 这个配置文件，GitHub 服务器就会在后台按配置定期扫描依赖、自动创建 PR。
 
-项目里这份配置的作用，相当于给 GitHub 的引擎写了一张“说明书”。只要这份文件存在于仓库中，引擎就会按它写的规则在这个仓库里干活。
+上游仓库的[作者](https://github.com/dodolalorc/astro-navfolio)写了这份配置文件，才把这个功能“激活”了。只要文件存在于仓库中，GitHub 引擎就会按规则自动干活；换成任何其他的 GitHub 仓库，放上同样的文件，都能获得完全一致的效果。
 
-这个区分很重要：**能力来自 GitHub，配置只是项目里的一份文件。** 换成任何其他 GitHub 仓库，放上同样的文件，效果完全一样。
-
-## 二、以本站项目为例：这张“说明书”写了什么
+## 二、dependabot.yml 配置文件
 
 ---
 
-我目前的配置是这样：
+以本项目为例：
 
 ```yaml
 version: 2
@@ -63,27 +61,33 @@ updates:
           - '*'
 ```
 
-几个关键参数的含义：
+**`package-ecosystem`（扫描生态）**
+这告诉 Dependabot 去扫描哪种类型的依赖文件。
+* 第一个任务配置了 `'bun'`，Dependabot 就会去读取项目根目录下的 `package.json` 和 `bun.lock`。GitHub 官方确认支持 Bun（需 >= v1.1.39）。如果你的项目用 `npm` 或 `pnpm`，这里对应改成 `'npm'` 或 `'pnpm'` 即可。
+* 第二个任务配置了 `'github-actions'`，专门负责扫描 `.github/workflows/` 里的自动化脚本依赖。
 
-**`package-ecosystem: 'bun'`** 告诉 Dependabot 去扫描 `package.json` 和 `bun.lock`。GitHub 官方文档确认 Bun 是受支持的生态之一，需要 Bun >= v1.1.39。如果你的项目用 npm 或 pnpm，这里对应改成 `'npm'` 或 `'pnpm'` 即可。
+**`directory: '/'`（扫描目录）**
+告诉 Dependabot 去哪里找上述的配置文件。`'/'` 代表项目的根目录。如果你的项目是 Monorepo（比如前端在 `frontend/`，后端在 `backend/`），这里就需要分别写 `'/frontend'` 和 `'/backend'`。
 
-**`schedule.interval: 'weekly'`** 是检查频率。可选值包括 `daily`、`weekly`、`monthly`，甚至 cron。每周一次对我来说刚好：PR 不会多到烦人，也不会漏掉重要的安全更新。
+**`schedule.interval: 'weekly'`（检查频率）**
+这是扫描的周期。可选值包括 `daily`、`weekly`、`monthly`。每周一次对我刚好：PR 不会多到烦人，也不会漏掉重要的安全更新。
 
-**`groups`** 是真正让 PR 数量变得可管理的配置。默认情况下，Dependabot 会为每个依赖单独开一个 PR。几十个依赖同时更新，PR 列表会瞬间被淹没。`groups` 把匹配 `patterns: ['*']` 的所有生产依赖打包成一个 PR，你只需要 review 一次、合并一次。
+**`groups`（合并更新，管理 PR 数量）**
+这是真正让 PR 数量变得可管理的核心配置。默认情况下，Dependabot 会为每个依赖单独开一个 PR。如果有几十个依赖同时更新，PR 列表会瞬间被淹没。`groups` 配合 `patterns: ['*']`，能把“本次扫描的周期内”所有匹配的生产依赖（或 Actions 依赖）打包进一个 PR，你只需要集中 review 一次、合并一次，极大地减轻了维护负担。
 
 实际收到的 PR 标题长这样：
 
 ```text
-Bump the production-dependencies group across 1 directory with 13 updates
+Bump the production-dependencies group with .... updates
 ```
 
 点开是一张表格，列出每个包从哪个版本升到哪个版本，附带的 release notes 和 changelog 链接也自动整理好了。不需要自己去 npm 或 GitHub 上逐个翻。
 
-## 三、它为什么算“规范”：对照几个标准
+## 三、带来的好处
 
 ---
 
-说它“规范”，不是随口一说。它把依赖管理从一件靠人记、靠自觉的事，变成了一个有节奏、有记录、可追溯的系统流程。
+它把依赖管理从一件靠人记、靠自觉的事，变成了一个有节奏、有记录、可追溯的系统流程。
 
 **符合 SemVer 的升级节奏。** Dependabot 在 PR 里会标注每个升级的类型：patch、minor 还是 major。SemVer 的约定是 major 可能包含 breaking change，minor 和 patch 理论上兼容。这意味着你只需要重点看 major 升级，patch 和 minor 可以快速放行。本站那次 13 个更新里，`@astrojs/mdx` 从 7 跳到 8、`mermaid` 从 11 跳到 12，都是 major——这提醒我合并后必须跑构建验证，而不是无脑点 Merge。
 
@@ -97,7 +101,7 @@ Bump the production-dependencies group across 1 directory with 13 updates
 
 ---
 
-这是我觉得最有意思的部分。Dependabot 的机制并不神秘，拆开看就三件事：
+Dependabot 的机制并不神秘，拆开看就三件事：
 
 1. 读取依赖清单文件（`package.json`、`bun.lock`、`pyproject.toml` 等）
 2. 对比上游 registry 的最新版本

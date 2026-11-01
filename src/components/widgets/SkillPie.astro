@@ -212,23 +212,15 @@ const grouped = items.reduce<Record<string, SkillItem[]>>((acc, item) => {
         const g = document.createElementNS(ns, 'g'),
           p = document.createElementNS(ns, 'path');
         g.classList.add('skill-slice');
-        g.style.setProperty('--explode-x', `${Math.cos(mid) * 14}px`);
-        g.style.setProperty('--explode-y', `${Math.sin(mid) * 14}px`);
+        g.style.setProperty('--explode-x', `${Math.cos(mid) * 24}px`);
+        g.style.setProperty('--explode-y', `${Math.sin(mid) * 24}px`);
         p.setAttribute('d', path(start, end));
         p.style.fill = item.color || colors[i % colors.length];
-        p.setAttribute('tabindex', '0');
-        p.setAttribute('role', 'button');
         p.setAttribute('aria-label', `${item.name}，${item.category}`);
         g.appendChild(p);
         svg.appendChild(g);
         sliceEls.push(g);
         g.addEventListener('click', () => select(i));
-        g.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            select(i);
-          }
-        });
       });
       host.querySelectorAll<HTMLElement>('[data-skill-name]').forEach((el) => {
         el.addEventListener('click', () => {
@@ -245,7 +237,7 @@ const grouped = items.reduce<Record<string, SkillItem[]>>((acc, item) => {
   setup();
   document.addEventListener('astro:page-load', setup);
 </script>
-<style>
+<style is:global>
   .skill-widget {
     display: grid;
     gap: 12px;
@@ -390,7 +382,7 @@ const grouped = items.reduce<Record<string, SkillItem[]>>((acc, item) => {
     opacity: 0.42;
   }
   .skill-slice.is-selected path {
-    filter: drop-shadow(0 3px 7px rgba(60, 45, 30, 0.28));
+    filter: drop-shadow(0 6px 14px rgba(60, 45, 30, 0.35));
   }
   @media (max-width: 560px) {
     .skill-widget__main {
