@@ -48,34 +48,50 @@ async function github() {
 
 async function gitee() {
   const login = process.env.GITEE_CONTRIBUTION_USERNAME || 'qu-fangxiang';
-  if (!login) throw new Error('Gitee contribution username is missing');
-  const url = `https://gitee.com/${encodeURIComponent(login)}/contribution_timeline?start_date=${key(start)}&end_date=${key(end)}`;
-  const response = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!response.ok) throw new Error(`Gitee contribution endpoint ${response.status}`);
-  const body = await response.json();
-  const entries = Array.isArray(body) ? body : body.data;
-  const result = empty();
-  if (!Array.isArray(entries) && body && typeof body === 'object') {
-    for (const [date, count] of Object.entries(body))
-      if (date in result && Number.isFinite(Number(count))) result[date] = Number(count);
-    if (Object.values(result).some((count) => count > 0)) return result;
+  const token = process.env.GITEE_TOKEN;
+  if (!token) throw new Error('GITEE_TOKEN is missing');
+  const headers = { Accept: 'application/json', Authorization: `Bearer ${token}` };
+  const api = 'https://gitee.com/api/v5';
+  const request = async (path, params = {}) => {
+    const query = new URLSearchParams({ ...params, access_token: token });
+    const response = await fetch(`${api}${path}?${query}`, { headers });
+    if (!response.ok) throw new Error(`Gitee API ${response.status} for ${path}`);
+    return response.json();
+  };
+  const repositories = [];
+  for (let page = 1; ; page += 1) {
+    const batch = await request('/user/repos', { page, per_page: 100, type: 'all' });
+    if (!Array.isArray(batch)) throw new Error('Gitee repositories response is invalid');
+    repositories.push(...batch);
+    if (batch.length < 100) break;
   }
-  if (!Array.isArray(entries)) throw new Error('Gitee native contribution data unavailable');
-  for (const item of entries) {
-    const rawDate = item.date || item.day || item.contribution_date || item.created_at;
-    if (!rawDate) continue;
-    const date = String(rawDate);
-    const localDate = item.created_at
-      ? new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Asia/Shanghai',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        }).format(new Date(rawDate))
-      : date.slice(0, 10);
-    if (!(localDate in result)) continue;
-    const count = item.count ?? item.contribution_count ?? item.contributions ?? item.commits;
-    result[localDate] += Number.isFinite(Number(count)) ? Number(count) : 1;
+  const result = empty();
+  for (const repository of repositories) {
+    const owner = repository.owner?.login || login;
+    const name = repository.path || repository.name;
+    if (!name) continue;
+    const commits = await request(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/commits`,
+      {
+        since: start.toISOString(),
+        until: new Date(end.getTime() + 86400000 - 1).toISOString(),
+        author: login,
+        per_page: 100,
+      },
+    );
+    if (!Array.isArray(commits))
+      throw new Error(`Gitee commits response is invalid for ${owner}/${name}`);
+    for (const commit of commits) {
+      const rawDate = commit.commit?.author?.date || commit.created_at;
+      if (!rawDate) continue;
+      const localDate = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date(rawDate));
+      if (localDate in result) result[localDate] += 1;
+    }
   }
   return result;
 }

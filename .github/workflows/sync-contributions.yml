@@ -19,6 +19,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.CONTRIBUTIONS_GITHUB_TOKEN || github.token }}
           GITHUB_CONTRIBUTION_USERNAME: ${{ vars.GITHUB_CONTRIBUTION_USERNAME || 'qfx2007' }}
           GITEE_CONTRIBUTION_USERNAME: ${{ vars.GITEE_CONTRIBUTION_USERNAME || 'qu-fangxiang' }}
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
       - name: Commit changed data
         run: |
           git config user.name github-actions[bot]
