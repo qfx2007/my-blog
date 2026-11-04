@@ -99,22 +99,79 @@
       const sakura = root.querySelector('.sakura-layer');
       const clicks = root.querySelector('.click-effects');
       const typewriter = document.querySelector('[data-typewriter]');
-      if (typewriter && !typewriter.dataset.typed) {
-        typewriter.dataset.typed = 'true';
+      const existing = window.__navfolioTypewriter;
+      // 页面切换后清理旧节点，避免计时器继续操作已卸载的元素。
+      if (existing?.element !== typewriter) existing?.cleanup();
+      if (typewriter && !window.__navfolioTypewriter) {
         const text = typewriter.getAttribute('aria-label') || '';
-        typewriter.textContent = '';
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         let index = 0;
+        let timer = 0;
+        let deadline = 0;
+        let mode = 'typing';
+        let paused = document.visibilityState === 'hidden';
         const cursor = document.createElement('span');
         cursor.textContent = '|';
         cursor.className = 'typewriter-cursor';
+        typewriter.textContent = '';
         typewriter.append(cursor);
+
+        // 统一管理计时器，便于暂停、恢复和页面卸载。
+        const clearTimer = () => {
+          if (timer) window.clearTimeout(timer);
+          timer = 0;
+        };
+        const schedule = (delay, callback) => {
+          clearTimer();
+          deadline = Date.now() + delay;
+          if (!paused) timer = window.setTimeout(callback, delay);
+        };
         const type = () => {
+          if (paused) return;
           if (index < text.length) {
             cursor.before(document.createTextNode(text[index++]));
-            setTimeout(type, 100);
-          } else setTimeout(() => cursor.remove(), 700);
+            schedule(100, type);
+            return;
+          }
+          // 打完后保留 30 秒，再从头开始播放。
+          mode = 'waiting';
+          cursor.remove();
+          schedule(30_000, restart);
         };
-        type();
+        const restart = () => {
+          if (paused) return;
+          index = 0;
+          mode = 'typing';
+          typewriter.textContent = '';
+          typewriter.append(cursor);
+          type();
+        };
+        const onVisibilityChange = () => {
+          // 后台标签页暂停倒计时，回到页面后继续剩余时间。
+          if (document.visibilityState === 'hidden') {
+            paused = true;
+            if (timer) deadline = Math.max(0, deadline - Date.now());
+            clearTimer();
+            return;
+          }
+          paused = false;
+          if (reducedMotion.matches) return;
+          schedule(deadline ? deadline : 100, mode === 'waiting' ? restart : type);
+        };
+        const cleanup = () => {
+          clearTimer();
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+          delete window.__navfolioTypewriter;
+        };
+        window.__navfolioTypewriter = { element: typewriter, cleanup };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        if (reducedMotion.matches) {
+          // 减少动态效果时直接显示完整文案。
+          cleanup();
+          typewriter.textContent = text;
+        } else {
+          type();
+        }
       }
       if (!sakura || sakura.dataset.ready) return;
       sakura.dataset.ready = 'true';
