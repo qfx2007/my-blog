@@ -13,21 +13,21 @@ import feather from '../../assets/figure/yumaobi.png';
       <div class="site-stats-divider" aria-hidden="true"></div>
     </div>
     <div class="site-stats-items">
-      <div class="site-stat" title="从 2026 年 7 月 30 日开始计算本站运行天数">
+      <div class="site-stat" title="从本站成功部署的那天开始计算">
         <AlarmClock size={18} strokeWidth={1.7} aria-hidden="true" />
         <div class="site-stat-text">
           <strong data-running-days>—</strong>
-          <span>站点运行</span>
+          <span>运行时间</span>
         </div>
       </div>
-      <div class="site-stat" title="UV：独立访客数，数据来自 51.LA 统计接口">
+      <div class="site-stat" title="本站独立访客数，数据来自 51.LA 统计接口">
         <Users size={18} strokeWidth={1.7} aria-hidden="true" />
         <div class="site-stat-text">
           <strong data-total-uv>—</strong>
           <span>访客人数</span>
         </div>
       </div>
-      <div class="site-stat" title="PV：页面浏览量，数据来自 51.LA 统计接口">
+      <div class="site-stat" title="本站所有页面浏览量，数据来自 51.LA 统计接口">
         <ChartNoAxesColumnIncreasing size={18} strokeWidth={1.7} aria-hidden="true" />
         <div class="site-stat-text">
           <strong data-total-pv>—</strong>
@@ -41,7 +41,33 @@ import feather from '../../assets/figure/yumaobi.png';
       <Sparkles class="site-stats-sparkles" size={18} strokeWidth={1.7} aria-hidden="true" />
       <div class="site-stats-divider" aria-hidden="true"></div>
     </div>
-    <div class="music-placeholder" aria-label="音乐播放器预留位置" title="音乐播放器预留位置"></div>
+    <div class="music-player" data-music-player>
+      <img class="music-cover" src="/music/cover.png" alt="音乐唱片封面" />
+      <div class="music-controls">
+        <div class="music-progress-row">
+          <input
+            data-music-progress
+            type="range"
+            min="0"
+            max="100"
+            value="0"
+            aria-label="播放进度"
+          />
+          <span data-music-time>0:00</span>
+        </div>
+        <div class="music-buttons">
+          <button type="button" data-music-prev aria-label="上一首">
+            ↶
+          </button>
+          <button type="button" data-music-toggle aria-label="播放">
+            ▶
+          </button>
+          <button type="button" data-music-next aria-label="下一首">
+            ↷
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -159,8 +185,64 @@ import feather from '../../assets/figure/yumaobi.png';
     font-size: 0.72rem;
   }
 
-  .music-placeholder {
+  .music-player {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     min-height: 54px;
+  }
+  .music-cover {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .music-player.is-playing .music-cover {
+    animation: music-cover-spin 12s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes music-cover-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .music-controls {
+    flex: 1;
+    min-width: 0;
+  }
+  .music-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .music-progress-row input {
+    flex: 1;
+    accent-color: var(--paper-accent);
+  }
+  .music-progress-row span {
+    color: var(--paper-ink-soft);
+    font: 0.7rem var(--font-code);
+  }
+  .music-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .music-buttons button {
+    border: 0;
+    background: transparent;
+    color: var(--paper-accent);
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  .music-buttons button:hover {
+    color: var(--paper-ink);
   }
 
   @media (max-width: 920px) {
@@ -238,4 +320,55 @@ import feather from '../../assets/figure/yumaobi.png';
 
   setupSiteStats();
   document.addEventListener('astro:page-load', setupSiteStats);
+</script>
+
+<script>
+  const tracks = ['/music/track-1.mp3', '/music/track-2.mp3'];
+  const state = (window.__navfolioMusic ??= { audio: new Audio(), index: 0, ready: false });
+  const setupMusic = () => {
+    state.cleanup?.();
+    const root = document.querySelector('[data-music-player]');
+    if (!root) return;
+    const toggle = root.querySelector('[data-music-toggle]');
+    const progress = root.querySelector('[data-music-progress]');
+    const time = root.querySelector('[data-music-time]');
+    if (!state.ready) {
+      state.audio.src = tracks[0];
+      state.audio.preload = 'metadata';
+      state.audio.addEventListener('ended', () => {
+        state.index = (state.index + 1) % tracks.length;
+        state.audio.src = tracks[state.index];
+        state.audio.play().catch(() => undefined);
+      });
+      state.ready = true;
+    }
+    const sync = () => {
+      root.classList.toggle('is-playing', !state.audio.paused);
+      toggle.textContent = state.audio.paused ? '▶' : 'Ⅱ';
+      toggle.setAttribute('aria-label', state.audio.paused ? '播放' : '暂停');
+      progress.value = state.audio.duration
+        ? String((state.audio.currentTime / state.audio.duration) * 100)
+        : '0';
+      time.textContent = `${Math.floor(state.audio.currentTime / 60)}:${String(Math.floor(state.audio.currentTime % 60)).padStart(2, '0')}`;
+    };
+    const change = (step) => {
+      state.index = (state.index + step + tracks.length) % tracks.length;
+      state.audio.src = tracks[state.index];
+      state.audio.play().catch(() => undefined);
+    };
+    toggle.onclick = () =>
+      state.audio.paused ? state.audio.play().catch(() => undefined) : state.audio.pause();
+    root.querySelector('[data-music-prev]').onclick = () => change(-1);
+    root.querySelector('[data-music-next]').onclick = () => change(1);
+    progress.oninput = () => {
+      if (state.audio.duration)
+        state.audio.currentTime = (Number(progress.value) / 100) * state.audio.duration;
+    };
+    state.audio.addEventListener('timeupdate', sync);
+    state.audio.addEventListener('play', sync);
+    state.audio.addEventListener('pause', sync);
+    sync();
+  };
+  setupMusic();
+  document.addEventListener('astro:page-load', setupMusic);
 </script>
