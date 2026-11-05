@@ -30,26 +30,11 @@ function json(data: unknown, status = 200) {
   });
 }
 
-async function sha256(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return [...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('')
-    .toUpperCase();
-}
-
 async function fetchSiteStats(env: Env) {
   const timestamp = Date.now().toString();
   const nonce = Math.random().toString(36).slice(2, 6);
-  const signParams = new URLSearchParams({
-    accessKey: env.ACCESS_KEY,
-    nonce,
-    secretKey: env.SECRET_KEY,
-    timestamp,
-  });
-  const sortedParams = [...signParams.entries()].sort(([a], [b]) => a.localeCompare(b));
-  const sign = await sha256(new URLSearchParams(sortedParams).toString());
+  // 当前 51.LA 使用低安全性校验，sign 直接使用 accessKey。
+  const sign = env.ACCESS_KEY;
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
