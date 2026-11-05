@@ -14,7 +14,8 @@ interface Env {
   SECRET_KEY: string;
 }
 
-const MASK_ID = '3170850';
+// 51.LA 后台统计 ID 对应的 SDK 掩码 ID。
+const MASK_ID = '3Rj42WeI5knyYbyF';
 const API_URL = 'https://v6-open.51.la/open/overview/get';
 const CACHE_PREFIX = 'site-stats:';
 
