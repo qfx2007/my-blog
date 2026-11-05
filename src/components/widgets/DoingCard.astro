@@ -204,18 +204,6 @@ const kindIconMap = {
     }
   }
 
-  /* 时间轴竖线：从每个圆徽标的圆心穿过 */
-  .activity-feed::before {
-    position: absolute;
-    top: 8px;
-    bottom: 8px;
-    left: 10px;
-    width: 1px;
-    background: var(--paper-line);
-    content: '';
-    pointer-events: none;
-  }
-
   .activity-item {
     position: relative;
     display: grid;
@@ -223,6 +211,18 @@ const kindIconMap = {
     gap: 10px;
     align-items: center;
     min-height: 34px;
+  }
+
+  /* 连接线跟随每条事件滚动，避免超出首屏后断开。 */
+  .activity-item:not(:last-child)::after {
+    position: absolute;
+    top: calc(50% + 11px);
+    bottom: calc(-50% + 11px);
+    left: 10px;
+    width: 1px;
+    background: var(--paper-line);
+    content: '';
+    pointer-events: none;
   }
 
   .activity-badge {
