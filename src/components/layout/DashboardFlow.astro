@@ -3,6 +3,7 @@
     <section class="flow-column main-column">
       <slot name="intro" />
       <slot name="doing" />
+      <slot name="site-stats" />
     </section>
 
     <aside class="flow-column side-column">
@@ -128,6 +129,10 @@
 
     .flow-grid :global(.doing-card) {
       order: 7;
+    }
+
+    .flow-grid :global(.site-stats) {
+      order: 8;
     }
   }
 </style>

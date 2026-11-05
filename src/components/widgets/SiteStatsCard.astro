@@ -1,0 +1,241 @@
+---
+import { AlarmClock, ChartNoAxesColumnIncreasing, Sparkles, Users } from 'lucide-astro';
+import feather from '../../assets/figure/yumaobi.png';
+---
+
+<section class="site-stats" aria-labelledby="site-stats-title" data-site-stats>
+  <div class="site-stats-panel site-stats-info">
+    <div class="site-stats-header">
+      <div class="site-stats-heading">
+        <img src={feather.src} alt="" />
+        <h2 id="site-stats-title">站点信息</h2>
+      </div>
+      <div class="site-stats-divider" aria-hidden="true"></div>
+    </div>
+    <div class="site-stats-items">
+      <div class="site-stat" title="从 2026 年 7 月 30 日开始计算本站运行天数">
+        <AlarmClock size={18} strokeWidth={1.7} aria-hidden="true" />
+        <div class="site-stat-text">
+          <strong data-running-days>—</strong>
+          <span>站点运行</span>
+        </div>
+      </div>
+      <div class="site-stat" title="UV：独立访客数，数据来自 51.LA 统计接口">
+        <Users size={18} strokeWidth={1.7} aria-hidden="true" />
+        <div class="site-stat-text">
+          <strong data-total-uv>—</strong>
+          <span>访客人数</span>
+        </div>
+      </div>
+      <div class="site-stat" title="PV：页面浏览量，数据来自 51.LA 统计接口">
+        <ChartNoAxesColumnIncreasing size={18} strokeWidth={1.7} aria-hidden="true" />
+        <div class="site-stat-text">
+          <strong data-total-pv>—</strong>
+          <span>访问量</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="site-stats-panel site-stats-music">
+    <div class="site-stats-header">
+      <Sparkles class="site-stats-sparkles" size={18} strokeWidth={1.7} aria-hidden="true" />
+      <div class="site-stats-divider" aria-hidden="true"></div>
+    </div>
+    <div class="music-placeholder" aria-label="音乐播放器预留位置" title="音乐播放器预留位置"></div>
+  </div>
+</section>
+
+<style>
+  .site-stats {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    margin-top: 10px;
+    color: var(--paper-ink);
+  }
+
+  .site-stats-panel {
+    position: relative;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .site-stats-info {
+    padding: 18px 28px 20px 0;
+  }
+
+  .site-stats-info::after {
+    position: absolute;
+    top: 58px;
+    right: 0;
+    bottom: 20px;
+    width: 1px;
+    background: color-mix(in srgb, var(--paper-accent) 20%, transparent);
+    content: '';
+  }
+
+  .site-stats-music {
+    padding: 18px 0 20px 28px;
+  }
+
+  .site-stats-header {
+    display: flex;
+    align-items: center;
+    min-height: 22px;
+    gap: 12px;
+  }
+
+  .site-stats-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--paper-accent);
+  }
+
+  .site-stats-heading img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 23px;
+    max-height: 22px;
+    flex: 0 0 auto;
+  }
+
+  h2 {
+    margin: 0;
+    font-family: var(--font-note);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .site-stats-divider {
+    flex: 1;
+    height: 1px;
+    background: color-mix(in srgb, var(--paper-accent) 20%, transparent);
+  }
+
+  .site-stats-sparkles {
+    flex: 0 0 auto;
+    color: var(--paper-accent);
+  }
+
+  .site-stats-items {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(16px, 3vw, 36px);
+    margin-top: 16px;
+  }
+
+  .site-stat {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    color: var(--paper-accent);
+  }
+
+  .site-stat svg {
+    flex: 0 0 auto;
+  }
+
+  .site-stat-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .site-stat strong {
+    color: var(--paper-ink);
+    font-family: var(--font-code);
+    font-size: 1rem;
+    line-height: 1.1;
+    font-weight: 700;
+  }
+
+  .site-stat span {
+    color: var(--paper-ink-soft);
+    font-size: 0.72rem;
+  }
+
+  .music-placeholder {
+    min-height: 54px;
+  }
+
+  @media (max-width: 920px) {
+    .site-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .site-stats-info,
+    .site-stats-music {
+      padding: 18px 0 20px;
+      border-right: 0;
+    }
+
+    .site-stats-info::after {
+      display: none;
+    }
+
+    .site-stats-music {
+      padding-top: 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .site-stats {
+      margin-top: 0;
+    }
+
+    .site-stats-items {
+      width: 100%;
+      gap: 0;
+      justify-content: space-evenly;
+    }
+
+    .site-stat {
+      flex: 1 1 0;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .site-stat-text {
+      align-items: center;
+      text-align: center;
+    }
+
+    .site-stat svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .site-stat strong {
+      font-size: 0.9rem;
+    }
+
+    .site-stat span {
+      font-size: 0.65rem;
+    }
+  }
+</style>
+<script>
+  const setupSiteStats = () => {
+    const root = document.querySelector('[data-site-stats]');
+    if (!root || root.dataset.ready) return;
+    root.dataset.ready = 'true';
+    const startedAt = new Date('2026-07-30T00:00:00+08:00');
+    const days = Math.max(1, Math.floor((Date.now() - startedAt.getTime()) / 86400000) + 1);
+    root.querySelector('[data-running-days]')!.textContent = `${days} 天`;
+    fetch('/api/site-stats')
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((stats: { totalUv: number; totalPv: number }) => {
+        root.querySelector('[data-total-uv]')!.textContent = stats.totalUv.toLocaleString('zh-CN');
+        root.querySelector('[data-total-pv]')!.textContent = stats.totalPv.toLocaleString('zh-CN');
+      })
+      .catch(() => undefined);
+  };
+
+  setupSiteStats();
+  document.addEventListener('astro:page-load', setupSiteStats);
+</script>

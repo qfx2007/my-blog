@@ -8,6 +8,7 @@ import BlogHeatmap from '../components/widgets/BlogHeatmap.astro';
 import ContributionHeatmap from '../components/widgets/ContributionHeatmap.astro';
 
 import DoingCard from '../components/widgets/DoingCard.astro';
+import SiteStatsCard from '../components/widgets/SiteStatsCard.astro';
 import { getSiteConfig } from '../data/site';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
@@ -46,6 +47,10 @@ const { home, profile, site } = await getSiteConfig();
 
     <Fragment slot="doing">
       <DoingCard items={home.doing} />
+    </Fragment>
+
+    <Fragment slot="site-stats">
+      <SiteStatsCard />
     </Fragment>
   </DashboardFlow>
 </BaseLayout>

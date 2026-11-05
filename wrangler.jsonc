@@ -1,11 +1,19 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "my-blog",
+  "main": "src/worker.ts",
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page",
+    "binding": "ASSETS",
   },
+  "kv_namespaces": [
+    {
+      "binding": "SITE_STATS_CACHE",
+      "id": "de6eea5cd6f046f6a08e49113cd59b4f",
+    },
+  ],
   "observability": {
     "enabled": true,
   },
