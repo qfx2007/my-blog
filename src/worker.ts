@@ -62,12 +62,13 @@ async function fetchSiteStats(env: Env) {
     }),
   });
 
-  if (!response.ok) throw new Error(`51.LA request failed: ${response.status}`);
+  if (!response.ok) throw new Error(`51la-http-${response.status}`);
   const result = (await response.json()) as {
     success?: boolean;
+    code?: string;
     bean?: { totalUv?: number; totalPv?: number };
   };
-  if (!result.success || !result.bean) throw new Error('51.LA returned an invalid response');
+  if (!result.success || !result.bean) throw new Error(`51la-response-${result.code ?? 'unknown'}`);
   return {
     totalUv: result.bean.totalUv ?? 0,
     totalPv: result.bean.totalPv ?? 0,
@@ -78,16 +79,30 @@ async function fetchSiteStats(env: Env) {
 async function getSiteStats(env: Env) {
   const today = new Date().toISOString().slice(0, 10);
   const key = `${CACHE_PREFIX}${today}`;
-  const cached = await env.SITE_STATS_CACHE.get(key, 'json');
+  let cached;
+  try {
+    cached = await env.SITE_STATS_CACHE.get(key, 'json');
+  } catch {
+    throw new Error('kv-read');
+  }
   if (cached) return cached;
 
   try {
     const stats = await fetchSiteStats(env);
-    await env.SITE_STATS_CACHE.put(key, JSON.stringify(stats), { expirationTtl: 172800 });
-    await env.SITE_STATS_CACHE.put(`${CACHE_PREFIX}latest`, JSON.stringify(stats));
+    try {
+      await env.SITE_STATS_CACHE.put(key, JSON.stringify(stats), { expirationTtl: 172800 });
+      await env.SITE_STATS_CACHE.put(`${CACHE_PREFIX}latest`, JSON.stringify(stats));
+    } catch {
+      throw new Error('kv-write');
+    }
     return stats;
   } catch (error) {
-    const latest = await env.SITE_STATS_CACHE.get(`${CACHE_PREFIX}latest`, 'json');
+    let latest;
+    try {
+      latest = await env.SITE_STATS_CACHE.get(`${CACHE_PREFIX}latest`, 'json');
+    } catch {
+      throw error;
+    }
     if (latest) return latest;
     throw error;
   }
@@ -99,8 +114,10 @@ export default {
     if (url.pathname === '/api/site-stats') {
       try {
         return json(await getSiteStats(env));
-      } catch {
-        return json({ error: 'site stats unavailable' }, 503);
+      } catch (error) {
+        // 只返回安全的阶段标识，避免泄露密钥或完整上游响应。
+        const reason = error instanceof Error ? error.message : 'unknown';
+        return json({ error: 'site stats unavailable', reason }, 503);
       }
     }
     return env.ASSETS.fetch(request);
