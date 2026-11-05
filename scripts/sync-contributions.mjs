@@ -98,18 +98,29 @@ async function gitee() {
 
 const output = 'public/contributions.json';
 try {
-  const gh = await github();
-  const gt = await gitee();
+  const sources = {};
+  let gh = empty();
+  let gt = empty();
+  try {
+    gh = await github();
+    sources.github = Object.values(gh).reduce((sum, count) => sum + count, 0);
+  } catch (error) {
+    console.warn('GitHub contribution sync failed:', error.message);
+  }
+  try {
+    gt = await gitee();
+    sources.gitee = Object.values(gt).reduce((sum, count) => sum + count, 0);
+  } catch (error) {
+    console.warn('Gitee contribution sync failed:', error.message);
+  }
+  if (!Object.keys(sources).length) throw new Error('All contribution sources failed');
   const contributions = Object.fromEntries(
     Object.keys(gh).map((date) => [date, gh[date] + gt[date]]),
   );
   const payload = {
     updatedAt: new Date().toISOString(),
     period: { start: key(start), end: key(end), days },
-    sources: {
-      github: Object.values(gh).reduce((sum, count) => sum + count, 0),
-      gitee: Object.values(gt).reduce((sum, count) => sum + count, 0),
-    },
+    sources,
     contributions,
   };
   await mkdir('public', { recursive: true });
