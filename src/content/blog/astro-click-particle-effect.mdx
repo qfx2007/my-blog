@@ -1,0 +1,57 @@
+---
+title: '鼠标点击粒子与圆环扩散的UI动效'
+description: '用原生 DOM 和 CSS 动画制作轻量的点击反馈效果。'
+date: '2026-10-29'
+draft: true
+tags:
+  - UI设计
+  - 工程化规范化
+  - GitHub
+categories:
+  - UI设计与动画
+series:
+  - 方法与工具
+comments: true
+sidebar:
+  enable: true
+  toc: true
+  relatedPosts: true
+---
+
+## 直接体验
+
+这个 demo 单独挂载在文章内容里，不会调用站点其他区域的点击反馈。先选择模式，再点击下方区域：
+
+- **彩色粒子**：只渲染从点击位置向外散开的粒子。
+- **圆环扩散**：只渲染一个逐渐变大的圆环。
+- **组合效果**：同时渲染两者。
+- **粒子数量**：拖动滑块后，右侧数字会立即更新，并影响下一次点击。
+
+<div class="particle-controls" data-particle-controls><button data-mode="particles">彩色粒子</button><button data-mode="ring">圆环扩散</button><button data-mode="combo" class="active">组合效果</button><label>粒子数量 <output data-count>14</output><input data-particle-count type="range" min="8" max="20" value="14" /></label></div><div class="particle-demo" data-particle-demo tabindex="0">点击这里体验</div>
+
+<script src="/demos/click-particle.js"></script>
+
+实现重点是把点击位置换算成容器内坐标，再给每个粒子设置不同的 CSS 变量。`transform` 负责移动，`opacity` 负责消失，动画结束后立即移除节点，因此不会留下残影。
+
+## 实现拆解
+
+### 1. 只在 demo 内监听点击
+
+脚本只查找同一组控件和演示区域，并在事件处理器中阻止事件继续冒泡。这样文章 demo 不会被页面其他点击反馈逻辑重复消费；`isolation: isolate` 也让粒子层保持在这个区域内。
+
+### 2. 用模式决定要创建的节点
+
+每次点击都会读取当前模式。粒子模式创建指定数量的粒子，圆环模式创建一个圆环，组合模式则同时创建两种节点。所有节点都在 `animationend` 后移除，连续点击时不会积累无用 DOM。
+
+### 3. 滑块是状态的一部分
+
+滑块的 `input` 事件会同步更新 `<output>`。创建粒子时再读取当前值，所以拖动后下一次点击就会使用新的数量。
+
+### 4. 键盘也能触发
+
+演示区域可以聚焦，按 `Enter` 或空格即可从中心位置触发一次效果；正文和说明不依赖 JavaScript，脚本失效时仍然可以正常阅读。
+
+## 参考来源
+
+视觉思路参考 [Magic UI](https://magicui.design/docs/components) 与 [CSS-Tricks 粒子动画实践](https://css-tricks.com/)。
+
