@@ -122,9 +122,9 @@ comment = true
 name = "Q"
 handle = "@Q"
 role = "A Prospective Frontend Engineer"
-email = "2171334945@qq.com"
+email = "qfx2007@foxmail.com"
 website = "https://blog.20070228.xyz/"
-github = "https://github.com/qfx2007/my-blog"
+github = "https://github.com/qfx2007"
 avatar = "/images/avatar.webp"
 
 [[config.topNav.links]]
@@ -228,7 +228,7 @@ copy = true
 [[config.home.links]]
 label = "Email"
 icon = "mail"
-tooltip = "2171334945@qq.com"
+tooltip = "qfx2007@foxmail.com"
 copy = true
 
 

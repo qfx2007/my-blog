@@ -6,6 +6,8 @@ import { Box, FileText, Sparkles } from 'lucide-astro';
 import Icon from '../Icon.astro';
 import { getSiteConfig } from '../../data/site';
 import { getUiText } from '../../utils/ui-text';
+import navfolioConfig from '../../../navfolio.config';
+import { isPageModuleEnabled } from '../../plugins/config';
 
 interface DoingItem {
   text: string;
@@ -21,10 +23,11 @@ interface Props {
 const { items = [], maxItems = 10 } = Astro.props;
 
 // 事件源：已发布的文章 / 项目（排除 index 落地页）/ 随笔，草稿不参与
+const vibeEnabled = isPageModuleEnabled(navfolioConfig, 'vibe');
 const [blogPosts, projects, vibeEntries] = await Promise.all([
   getCollection('blog', ({ data }) => !data.draft),
   getCollection('projects', ({ data }) => !data.draft),
-  getCollection('vibe', ({ data }) => !data.draft),
+  vibeEnabled ? getCollection('vibe', ({ data }) => !data.draft) : Promise.resolve([]),
 ]);
 
 type EventKind = 'article' | 'project' | 'vibe';
