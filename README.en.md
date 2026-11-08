@@ -1,8 +1,22 @@
-# Q's Personal Tech Blog
+<p align="center">
+   <strong style="font-size:24px;">My Personal Tech Blog</strong>
+</p>
 
-This repository contains Q's personal technical blog and portfolio. It records an ongoing exploration of full-stack AI development through project work, technical notes, engineering retrospectives, and everyday writing.
+<p align="center">
+This is my personal tech blog and portfolio, documenting my learning journey, project practices, technical notes and casual writings in AI full-stack development. This site focuses on real-world projects, development retrospectives and continuously accumulated practical content.
+</p>
 
-Website: [blog.20070228.xyz](https://blog.20070228.xyz)
+<p align="center">
+  <a href="./README.md">简体中文</a>
+  ·
+  <a href="./README.en.md">English</a>
+  ·
+  <a href="https://blog.20070228.xyz/">Live Preview</a>
+</p>
+
+<p align="center">
+  <img src="./public/images/site-in-devices.png" alt="Q's device preview" />
+</p>
 
 ## Content
 

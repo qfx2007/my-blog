@@ -1,8 +1,22 @@
-# Q 的个人技术博客
+<p align="center">
+   <strong style="font-size:24px;">我的个人技术博客</strong>
+</p>
 
-这是 Q 的个人技术博客与作品集，记录 AI 全栈方向的学习过程、项目实践、技术笔记和生活随笔。站点重点展示真实项目、开发复盘和持续积累的内容。
+<p align="center">
+这是我的的个人技术博客与作品集，记录 AI 全栈方向的学习过程、项目实践、技术笔记和生活随笔。站点重点展示真实项目、开发复盘和持续积累的实践内容。
+</p>
 
-站点地址：[blog.20070228.xyz](https://blog.20070228.xyz)
+<p align="center">
+  <a href="./README.md">简体中文</a>
+  ·
+  <a href="./README.en.md">English</a>
+  ·
+  <a href="https://blog.20070228.xyz/">在线预览</a>
+</p>
+
+<p align="center">
+  <img src="./public/images/site-in-devices.png" alt="Q's device preview" />
+</p>
 
 ## 内容
 
