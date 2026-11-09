@@ -1,0 +1,187 @@
+---
+title: '打字机文字动画'
+description: '使用原生 JavaScript 实现打字机文字效果，记录动画原理、交互控制和可调整的参数。'
+date: '2026-10-28'
+draft: false
+tags:
+  - 动画
+categories:
+  - UI设计与动画
+series:
+  - 方法与工具
+comments: true
+sidebar:
+  enable: true
+  toc: true
+  relatedPosts: true
+---
+
+最近在折腾一些 UI 动画，尝试给以前做过的项目加上一些有意思的交互效果。打字机动画算是其中比较容易实现的一种，虽然没有太复杂的交互，但逐字出现的文字比直接显示整段内容多了点趣味, 呈现出的视觉效果也蛮不错的。
+
+它的原理也比较简单：利用 JavaScript 定时更新文字内容，让字符按照一定的时间间隔依次出现。
+
+这里整理一下这个效果的演示、基本实现思路，以及一些可以调整的参数，方便以后修改或在其他项目中复用。
+
+## 效果演示
+
+<div class="typing-demo">
+  <strong data-typing-output>用代码创造有趣的东西。</strong>
+  <button type="button" data-typing-toggle>暂停</button>
+  <button type="button" data-typing-next>切换文字</button>
+</div>
+
+<script src="/demos/typewriter.js"></script>
+
+上面是一个简单的打字机演示，可以通过按钮控制：
+
+- **暂停 / 继续**：暂停当前文字的显示进度，再次点击后继续。
+- **切换文字**：切换到下一段文字，并从头开始播放。
+
+当一段文字完整显示后，会短暂停留，然后清空并重新输入。这里没有加入逐字删除的过程。
+
+## 实现原理
+
+这个效果使用原生 JavaScript 实现，不需要额外引入动画库。
+
+核心思路是通过 `setTimeout()` 定时执行函数，结合字符串的 `slice()` 方法，逐步更新页面中的文字内容。
+
+### 1. 准备文字与状态
+
+首先，定义需要展示的文字，以及控制动画运行的几个变量：
+
+~~~js
+const messages = [
+  '用代码创造有趣的东西。',
+  '把想法做成可以点击的体验。',
+  '慢慢写，持续记录。'
+];
+
+let message = 0;
+let index = 0;
+let paused = false;
+~~~
+
+其中：
+
+- `messages`：存放需要展示的文字。
+- `message`：记录当前显示的是第几段文字。
+- `index`：记录当前文字的显示进度。
+- `paused`：记录动画是否处于暂停状态。
+
+### 2. 逐字显示文字
+
+动画的核心是 `tick()` 函数：
+
+~~~js
+const tick = () => {
+  if (!paused) {
+    output.textContent = messages[message].slice(0, index);
+    index += 1;
+
+    if (index > messages[message].length) {
+      index = 0;
+    }
+  }
+
+  setTimeout(tick, index === 0 ? 900 : 90);
+};
+~~~
+
+这里最关键的是：
+
+~~~js
+messages[message].slice(0, index)
+~~~
+
+`slice(0, index)` 会截取当前字符串从开头到指定位置的内容。
+
+例如，对于文字 `Hello`，随着 `index` 逐渐增加，显示效果会依次变成：
+
+~~~text
+H
+He
+Hel
+Hell
+Hello
+~~~
+
+每执行一次 `tick()`，就更新一次页面上的文字内容。
+
+当 `index` 超过当前文字长度时，会被重置为 `0`，下一轮重新开始输入。
+
+### 3. 控制动画速度
+
+代码中通过 `setTimeout()` 控制每次更新的时间：
+
+~~~js
+setTimeout(tick, index === 0 ? 900 : 90);
+~~~
+
+这里设置了两种时间间隔：
+
+| 参数 | 当前值 | 作用 |
+|------|--------|------|
+| 打字间隔 | `90ms` | 控制逐字显示的速度 |
+| 循环等待 | `900ms` | 每轮文字结束后的等待时间 |
+
+修改 `90` 可以调整打字速度，数值越小，输入越快。
+
+修改 `900` 则可以调整每轮动画之间的停顿时间。
+
+需要注意的是，当前实现会在重置索引后等待 `900ms`，然后清空文字，再经过下一次定时更新开始显示第一个字符。因此实际视觉停顿会比单纯的 `900ms` 略长。
+
+### 4. 暂停与恢复
+
+暂停按钮通过一个布尔变量控制动画状态：
+
+~~~js
+toggle?.addEventListener('click', () => {
+  paused = !paused;
+  toggle.textContent = paused ? '继续' : '暂停';
+});
+~~~
+
+每次点击按钮，`paused` 的值都会在 `true` 和 `false` 之间切换。
+
+当 `paused` 为 `true` 时，`tick()` 不再更新文字，但定时器仍会继续执行。
+
+再次点击后，动画会从当前进度继续。
+
+### 5. 切换文字
+
+切换按钮的逻辑也比较简单：
+
+~~~js
+next?.addEventListener('click', () => {
+  message = (message + 1) % messages.length;
+  index = 0;
+});
+~~~
+
+其中：
+
+~~~js
+(message + 1) % messages.length
+~~~
+
+利用取余运算，让文字索引在数组范围内循环。
+
+例如，当前共有三段文字：
+
+~~~text
+第 1 段 → 第 2 段 → 第 3 段 → 第 1 段
+~~~
+
+每次点击都会切换到下一段，并重置当前的显示进度。
+
+需要注意，切换按钮不会改变暂停状态。如果动画已经暂停，切换文字后仍需要点击“继续”才能开始显示。
+
+## 小结
+
+这个版本没有使用复杂的配置系统，需要修改效果时，直接调整 JavaScript 中的对应代码即可。例如如果需要增加更多文字，只需要在 `messages` 数组中添加新的字符串这种即可。
+
+目前的实现不会自动切换到下一段文字，而是循环输入当前内容。只有点击“切换文字”按钮，才会改变显示的文本。以后如果想增加逐字删除、光标闪烁或者自动切换文字，也可以在这个基础上继续扩展。
+
+## 参考资料
+
+- [Typed.js 官方演示](https://mattboldt.com/demos/typed-js/)：参考不同的打字机动画效果。
