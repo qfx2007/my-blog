@@ -138,3 +138,5 @@ scripts/                   构建、字体和内容脚本
 ## 许可
 
 项目继续保留原主题的 MIT License，同时本站内容、图片和个人资料属于本站作者。
+
+如果对你有帮助，欢迎点亮仓库的 star：https://github.com/qfx2007/my-blog。
