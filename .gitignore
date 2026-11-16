@@ -34,3 +34,6 @@ public/friend-circle.json
 
 # wrangler local cache
 .wrangler/
+
+# 忽略个人私有文档
+PROJECT_DETAILS.md
